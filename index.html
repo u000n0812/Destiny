@@ -111,7 +111,7 @@ body{
 .page{
   position:relative;
   width:210mm; height:296.9mm;
-  padding:13mm 14mm 11mm;
+  padding:12mm 14mm 10mm;
   background:var(--paper);
   box-shadow:0 1px 3px rgba(0,0,0,.13), 0 10px 30px rgba(0,0,0,.10);
   display:flex; flex-direction:column;
@@ -149,14 +149,14 @@ body{
 .grow{flex:1 0 auto; min-height:0}
 .sec-h{
   display:flex; align-items:baseline; gap:8px;
-  border-bottom:1px solid var(--rule); padding-bottom:3px;
+  border-bottom:1px solid var(--rule); padding-bottom:2px;
 }
 .sec-h h2{
   margin:0; font-family:var(--f-serif); font-size:10.8pt; font-weight:600; letter-spacing:.06em;
 }
 .sec-h .hj{font-size:7.6pt; letter-spacing:.2em; color:var(--ink-3)}
 .sec-h .hint{margin-left:auto; font-size:7pt; color:var(--ink-3); letter-spacing:.02em}
-.stack{display:flex; flex-direction:column; gap:9px; flex:1; min-height:0}
+.stack{display:flex; flex-direction:column; gap:8px; flex:1; min-height:0}
 .row-2{display:grid; grid-template-columns:1fr 1fr; gap:9px}
 .row-2u{display:grid; grid-template-columns:1.15fr .85fr; gap:10px}
 
@@ -188,7 +188,7 @@ select.f{-webkit-appearance:none; appearance:none; cursor:pointer; padding-right
 /* ---------- 명식 ---------- */
 .mingsik{border:1px solid var(--rule-strong); border-radius:2px; overflow:hidden}
 .ms-grid{display:grid; grid-template-columns:17mm repeat(4,1fr)}
-.ms-grid > *{border-right:1px solid var(--rule); border-bottom:1px solid var(--rule); padding:2.5px 4px; min-width:0}
+.ms-grid > *{border-right:1px solid var(--rule); border-bottom:1px solid var(--rule); padding:2px 4px; min-width:0}
 .ms-grid > *:nth-child(5n){border-right:0}
 .ms-rowlbl{
   background:var(--panel); font-size:6.9pt; letter-spacing:.09em; color:var(--ink-2);
@@ -236,7 +236,7 @@ select.f{-webkit-appearance:none; appearance:none; cursor:pointer; padding-right
 .mode-view .chipinput, .chips-hasitems + .chipinput{}
 
 /* ---------- 오행 막대 ---------- */
-.bars{display:flex; flex-direction:column; gap:3.5px}
+.bars{display:flex; flex-direction:column; gap:3px}
 .bar{display:grid; grid-template-columns:15mm 1fr 15mm; align-items:center; gap:6px}
 .bar .name{display:flex; align-items:center; gap:4px; font-size:8pt}
 .bar .glyph{
@@ -258,6 +258,25 @@ select.f{-webkit-appearance:none; appearance:none; cursor:pointer; padding-right
 .bar.wx-geum .fill{background:var(--wx-geum)} .bar.wx-geum .glyph{color:var(--wx-geum)}
 .bar.wx-su .fill{background:var(--wx-su)}   .bar.wx-su .glyph{color:var(--wx-su)}
 .bar.is-zero .track{box-shadow:inset 0 0 0 1px var(--seal)}
+
+/* 오행 막대 — 개수와 가중 점수를 나란히 (막대는 점수 기준) */
+.wxbar{grid-template-columns:12.5mm 1fr 7mm 18mm}
+.bars-head{
+  display:grid; grid-template-columns:12.5mm 1fr 7mm 18mm; gap:6px;
+  font-size:6.6pt; letter-spacing:.11em; color:var(--ink-3); margin-bottom:1px;
+}
+.bars-head span:nth-child(3),.bars-head span:nth-child(4){text-align:right}
+.wxbar .cnt input{
+  width:100%; text-align:right; font-size:8pt; color:var(--ink-2);
+  font-variant-numeric:tabular-nums;
+}
+.wxbar .score{
+  display:flex; justify-content:flex-end; align-items:baseline; gap:4px;
+  font-variant-numeric:tabular-nums;
+}
+.wxbar .score b{font-size:8.6pt; font-weight:600; color:var(--ink)}
+.wxbar .score .pct{font-size:7pt; color:var(--ink-3); min-width:22px; text-align:right}
+.wx-formula{font-size:6.6pt; line-height:1.45; color:var(--ink-3); margin-top:2px}
 .bars-foot{display:flex; justify-content:space-between; font-size:7pt; color:var(--ink-3); margin-top:1px}
 .bars-foot .warn{color:var(--seal)}
 
@@ -447,10 +466,10 @@ input[type="range"].f:focus-visible::-moz-range-thumb{outline:2px solid var(--ac
       <div class="mingsik">
         <div class="ms-grid">
           <div class="ms-rowlbl" style="background:var(--panel)"></div>
-          <div class="ms-head"><span class="pil">時柱</span><span class="pil-sub">시주 · 자녀/말년</span></div>
-          <div class="ms-head"><span class="pil">日柱</span><span class="pil-sub">일주 · 본인/배우자</span></div>
-          <div class="ms-head"><span class="pil">月柱</span><span class="pil-sub">월주 · 부모/사회</span></div>
-          <div class="ms-head"><span class="pil">年柱</span><span class="pil-sub">년주 · 조상/초년</span></div>
+          <div class="ms-head"><span class="pil">時柱</span><span class="pil-sub">시주</span></div>
+          <div class="ms-head"><span class="pil">日柱</span><span class="pil-sub">일주</span></div>
+          <div class="ms-head"><span class="pil">月柱</span><span class="pil-sub">월주</span></div>
+          <div class="ms-head"><span class="pil">年柱</span><span class="pil-sub">년주</span></div>
 
           <div class="ms-rowlbl">천간 십성</div>
           <div class="ms-cell ms-sip"><input class="f" data-k="ms.sipGan.si" placeholder="―"></div>
@@ -516,27 +535,34 @@ input[type="range"].f:focus-visible::-moz-range-thumb{outline:2px solid var(--ac
       <div class="sec">
         <div class="sec-h"><h2>오행 분포</h2><span class="hj">五行分布</span>
           <span class="hint" id="wxMode">명식에서 자동 집계</span></div>
+        <div class="bars-head"><span></span><span></span><span>개수</span><span>점수</span></div>
         <div class="bars" id="wxBars">
-          <div class="bar wx-mok"><div class="name"><span class="glyph">木</span><span class="kor">목</span></div>
+          <div class="bar wxbar wx-mok"><div class="name"><span class="glyph">木</span><span class="kor">목</span></div>
             <div class="track"><div class="fill"></div></div>
-            <div class="val"><input class="f" data-k="wx.mok" inputmode="numeric" value="0"><span class="pct">0%</span></div></div>
-          <div class="bar wx-hwa"><div class="name"><span class="glyph">火</span><span class="kor">화</span></div>
+            <div class="cnt"><input class="f" data-k="wx.mok" inputmode="numeric" value="0" aria-label="목 개수"></div>
+            <div class="score"><b>0</b><span class="pct">0%</span></div></div>
+          <div class="bar wxbar wx-hwa"><div class="name"><span class="glyph">火</span><span class="kor">화</span></div>
             <div class="track"><div class="fill"></div></div>
-            <div class="val"><input class="f" data-k="wx.hwa" inputmode="numeric" value="0"><span class="pct">0%</span></div></div>
-          <div class="bar wx-to"><div class="name"><span class="glyph">土</span><span class="kor">토</span></div>
+            <div class="cnt"><input class="f" data-k="wx.hwa" inputmode="numeric" value="0" aria-label="화 개수"></div>
+            <div class="score"><b>0</b><span class="pct">0%</span></div></div>
+          <div class="bar wxbar wx-to"><div class="name"><span class="glyph">土</span><span class="kor">토</span></div>
             <div class="track"><div class="fill"></div></div>
-            <div class="val"><input class="f" data-k="wx.to" inputmode="numeric" value="0"><span class="pct">0%</span></div></div>
-          <div class="bar wx-geum"><div class="name"><span class="glyph">金</span><span class="kor">금</span></div>
+            <div class="cnt"><input class="f" data-k="wx.to" inputmode="numeric" value="0" aria-label="토 개수"></div>
+            <div class="score"><b>0</b><span class="pct">0%</span></div></div>
+          <div class="bar wxbar wx-geum"><div class="name"><span class="glyph">金</span><span class="kor">금</span></div>
             <div class="track"><div class="fill"></div></div>
-            <div class="val"><input class="f" data-k="wx.geum" inputmode="numeric" value="0"><span class="pct">0%</span></div></div>
-          <div class="bar wx-su"><div class="name"><span class="glyph">水</span><span class="kor">수</span></div>
+            <div class="cnt"><input class="f" data-k="wx.geum" inputmode="numeric" value="0" aria-label="금 개수"></div>
+            <div class="score"><b>0</b><span class="pct">0%</span></div></div>
+          <div class="bar wxbar wx-su"><div class="name"><span class="glyph">水</span><span class="kor">수</span></div>
             <div class="track"><div class="fill"></div></div>
-            <div class="val"><input class="f" data-k="wx.su" inputmode="numeric" value="0"><span class="pct">0%</span></div></div>
+            <div class="cnt"><input class="f" data-k="wx.su" inputmode="numeric" value="0" aria-label="수 개수"></div>
+            <div class="score"><b>0</b><span class="pct">0%</span></div></div>
         </div>
         <div class="bars-foot">
-          <span id="wxSum">합 0자</span>
+          <span id="wxSum">합 0자 · 0점</span>
           <span id="wxMissing"></span>
         </div>
+        <div class="wx-formula">점수 = 천간 각 10 · 지지 시 15 · 일 15 · 월 30 · 년 10 (만점 110)</div>
       </div>
 
       <div class="sec">
@@ -794,6 +820,13 @@ var WX = {};
 var WX_LABEL = {mok:"목",hwa:"화",to:"토",geum:"금",su:"수"};
 var WX_KEYS  = ["mok","hwa","to","geum","su"];
 
+/* 오행 점수 가중치 — 월지가 계절을 쥐고 있어 가장 무겁다. 합 110점 */
+var WEIGHT = {
+  gan: {si:10, il:10, wol:10, nyeon:10},
+  ji:  {si:15, il:15, wol:30, nyeon:10}
+};
+var WEIGHT_TOTAL = 110;
+
 function wuxingOf(str){
   if(!str) return null;
   for(var i=0;i<str.length;i++){ if(WX[str[i]]) return WX[str[i]]; }
@@ -911,6 +944,7 @@ function renderChips(){
 
 function renderMingsik(){
   var counts = {mok:0,hwa:0,to:0,geum:0,su:0};
+  var scores = {mok:0,hwa:0,to:0,geum:0,su:0};
   var filled = 0;
   document.querySelectorAll("[data-wx]").forEach(function(input){
     var cell = input.closest(".gz");
@@ -921,11 +955,14 @@ function renderMingsik(){
       cell.classList.add("wx-"+wx);
       tag.textContent = WX_LABEL[wx];
       counts[wx]++; filled++;
+      // data-k = "ms.<gan|ji>.<si|il|wol|nyeon>" — 자리마다 가중치가 다르다
+      var at = input.dataset.k.split(".");
+      scores[wx] += (WEIGHT[at[1]] || {})[at[2]] || 0;
     }else{
       tag.textContent = "";
     }
   });
-  return {counts:counts, filled:filled};
+  return {counts:counts, scores:scores, filled:filled};
 }
 
 function renderBars(rootId, keys, prefix, sumEl, noteEl, markZero){
@@ -961,16 +998,40 @@ function renderWuxing(){
   }else if(!auto){
     modeEl.textContent = "직접 입력 (지장간 반영)";
   }
-  var r = renderBars("wxBars", WX_KEYS, "wx.",
-    document.getElementById("wxSum"), null, true);
-  // 빈 서식에서는 다섯 칸이 모두 '없음'으로 표시되지 않도록, 자료가 있을 때만 판정한다
-  var hasData = r.total > 0;
-  var missing = hasData
-    ? WX_KEYS.filter(function(k){ return r.vals[k] === 0; }).map(function(k){ return WX_LABEL[k]; })
-    : [];
-  document.querySelectorAll("#wxBars .bar").forEach(function(bar){
-    if(!hasData) bar.classList.remove("is-zero");
+  // 개수는 입력칸에서, 점수는 명식 자리에서 온다
+  var counts = {}, totalCount = 0, totalScore = 0;
+  WX_KEYS.forEach(function(k){
+    var n = parseFloat(document.querySelector('[data-k="wx.'+k+'"]').value);
+    if(!isFinite(n) || n < 0) n = 0;
+    counts[k] = n; totalCount += n;
+    totalScore += ms.scores[k];
   });
+
+  // 막대는 가중 점수 기준. 명식이 아직 없으면 개수로 대신한다
+  var byScore = totalScore > 0;
+  var basis = byScore ? ms.scores : counts;
+  var basisTotal = byScore ? totalScore : totalCount;
+  var max = Math.max.apply(null, WX_KEYS.map(function(k){ return basis[k]; }).concat([1]));
+
+  var hasData = totalCount > 0 || byScore;
+  var bars = document.querySelectorAll("#wxBars .bar");
+  WX_KEYS.forEach(function(k, i){
+    var bar = bars[i]; if(!bar) return;
+    bar.querySelector(".fill").style.width = (basis[k] / max * 100) + "%";
+    bar.querySelector(".score b").textContent = ms.scores[k];
+    bar.querySelector(".score .pct").textContent =
+      basisTotal ? Math.round(basis[k] / basisTotal * 100) + "%" : "0%";
+    // 빈 서식에서 다섯 칸이 모두 '없음'으로 보이지 않도록, 자료가 있을 때만 표시한다
+    bar.classList.toggle("is-zero", hasData && counts[k] === 0);
+  });
+
+  document.getElementById("wxSum").textContent =
+    "합 " + (Math.round(totalCount*10)/10) + "자 · " + totalScore + "점"
+    + (byScore && totalScore !== WEIGHT_TOTAL ? " / " + WEIGHT_TOTAL : "");
+
+  var missing = hasData
+    ? WX_KEYS.filter(function(k){ return counts[k] === 0; }).map(function(k){ return WX_LABEL[k]; })
+    : [];
   var mEl = document.getElementById("wxMissing");
   mEl.textContent = !hasData ? "" : (missing.length ? "무(無)오행 · " + missing.join("·") : "오행 구전");
   mEl.className = missing.length ? "warn" : "";
