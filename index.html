@@ -406,24 +406,148 @@ input[type="range"].f:focus-visible::-moz-range-thumb{outline:2px solid var(--ac
   .row-2,.row-2u{grid-template-columns:1fr}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+
+/* ══════ 작업 공간 (화면 전용) ══════ */
+.tb-title{margin-right:2px}
+.client-pick{position:relative}
+.btn-client{
+  display:flex; align-items:center; gap:7px; max-width:44ch;
+  background:var(--panel); border:1px solid var(--rule-strong);
+}
+.btn-client b{font-weight:600; font-size:9pt; white-space:nowrap}
+.btn-client span.meta{font-size:7.4pt; color:var(--ink-3); white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis}
+.btn-client i{font-style:normal; color:var(--ink-3); font-size:7pt}
+.drop{
+  position:absolute; top:calc(100% + 5px); left:0; z-index:60;
+  width:340px; max-height:60vh; display:flex; flex-direction:column;
+  background:var(--paper); border:1px solid var(--rule-strong); border-radius:3px;
+  box-shadow:0 6px 24px rgba(0,0,0,.18);
+}
+.drop[hidden]{display:none}
+.drop .srch{padding:7px; border-bottom:1px solid var(--rule)}
+.drop .srch input{
+  width:100%; font:inherit; font-size:8.6pt; padding:5px 8px;
+  border:1px solid var(--rule-strong); border-radius:2px;
+  background:var(--panel); color:var(--ink);
+}
+.drop .list{overflow-y:auto; flex:1; min-height:0}
+.crow{
+  display:flex; align-items:center; gap:8px; padding:7px 9px; cursor:pointer;
+  border-bottom:1px solid var(--rule);
+}
+.crow:hover{background:var(--panel)}
+.crow.on{background:var(--field); box-shadow:inset 2px 0 0 var(--accent)}
+.crow .nm{flex:1; min-width:0}
+.crow .nm b{display:block; font-size:9pt; font-weight:600}
+.crow .nm span{display:block; font-size:7.2pt; color:var(--ink-3)}
+.crow .del{
+  font:inherit; font-size:8pt; line-height:1; padding:3px 6px; cursor:pointer;
+  background:transparent; border:1px solid transparent; border-radius:2px; color:var(--ink-3);
+}
+.crow .del:hover{border-color:var(--seal); color:var(--seal)}
+.drop .foot{display:flex; gap:6px; padding:7px; border-top:1px solid var(--rule)}
+.drop .foot .btn{flex:1}
+.empty{padding:16px 10px; text-align:center; font-size:8.2pt; color:var(--ink-3)}
+
+.panel{
+  background:var(--panel); border-bottom:1px solid var(--rule-strong);
+  padding:10px 14px 12px;
+}
+.panel[hidden]{display:none}
+.panel h3{
+  margin:0 0 7px; font-size:8pt; letter-spacing:.14em; color:var(--ink-3); font-weight:500;
+}
+.pgrid{display:flex; flex-wrap:wrap; gap:9px 12px; align-items:flex-end}
+.fld{display:flex; flex-direction:column; gap:3px}
+.fld label{font-size:7pt; letter-spacing:.1em; color:var(--ink-3)}
+.fld input, .fld select{
+  font:inherit; font-size:9pt; padding:5px 7px; color:var(--ink);
+  background:var(--paper); border:1px solid var(--rule-strong); border-radius:2px;
+}
+.fld input:focus, .fld select:focus{outline:2px solid var(--accent); outline-offset:-1px}
+.fld.w-name input{width:15ch} .fld.w-date input{width:17ch}
+.fld.w-time input{width:11ch} .fld.w-lon input{width:9ch}
+.chk{display:flex; align-items:center; gap:5px; font-size:8.4pt; padding-bottom:6px}
+.calc-out{
+  margin-top:9px; padding:8px 10px; border:1px solid var(--rule-strong); border-radius:2px;
+  background:var(--paper); font-size:8.4pt; line-height:1.6;
+}
+.calc-out[hidden]{display:none}
+.calc-out .gz{font-family:var(--f-serif); font-size:13pt; letter-spacing:.1em; padding:0}
+.calc-out .warn{color:var(--seal)}
+.calc-out .ok{color:var(--st-good)}
+.auto-mark{position:relative}
+body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
+@media (prefers-color-scheme:dark){ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(143,179,222,.35)} }
+.legend{font-size:7pt; color:var(--ink-3); margin-top:6px}
+@media print{ .panel, .drop{display:none!important} }
 </style>
 </head>
 <body class="mode-edit">
 
 <div class="toolbar no-print">
   <div class="tb-title">사주 명리 감정서<small>SAJU APPRAISAL SHEET</small></div>
+
+  <div class="client-pick">
+    <button type="button" class="btn btn-client" id="bClients" aria-haspopup="true" aria-expanded="false">
+      <b id="curName">—</b><span class="meta" id="curMeta"></span><i>▾</i>
+    </button>
+    <div class="drop" id="clientDrop" hidden>
+      <div class="srch"><input type="search" id="cSearch" placeholder="이름으로 찾기" aria-label="의뢰인 검색"></div>
+      <div class="list" id="clientList"></div>
+      <div class="foot">
+        <button type="button" class="btn" id="bNew">새 의뢰인</button>
+        <button type="button" class="btn" id="bDup">복제</button>
+        <button type="button" class="btn" id="bRename">이름 변경</button>
+      </div>
+    </div>
+  </div>
+
+  <span class="savenote" id="saveNote">불러오는 중</span>
+  <div class="tb-spacer"></div>
+  <button type="button" class="btn" id="bPanel">입력 · 계산</button>
   <div class="seg" role="group" aria-label="보기 모드">
     <button type="button" id="mEdit" aria-pressed="true">작성</button>
     <button type="button" id="mView" aria-pressed="false">미리보기</button>
   </div>
-  <span class="savenote" id="saveNote">불러오는 중</span>
-  <div class="tb-spacer"></div>
-  <button type="button" class="btn" id="bSample">예시 채우기</button>
   <button type="button" class="btn" id="bImport">불러오기</button>
-  <button type="button" class="btn" id="bExport">JSON 저장</button>
-  <button type="button" class="btn" id="bClear">비우기</button>
+  <button type="button" class="btn" id="bExport">백업 저장</button>
   <button type="button" class="btn btn-primary" id="bPrint">인쇄 · PDF</button>
   <input type="file" id="fileIn" accept="application/json" hidden>
+</div>
+
+<div class="panel no-print" id="calcPanel">
+  <h3>의뢰인 정보 — 입력하면 만세력에 따라 명식부터 대운까지 채웁니다</h3>
+  <div class="pgrid">
+    <div class="fld w-name"><label for="iName">성명</label>
+      <input id="iName" type="text" placeholder="박재윤"></div>
+    <div class="fld"><label for="iSex">성별</label>
+      <select id="iSex"><option value="M">남 · 건명</option><option value="F">여 · 곤명</option></select></div>
+    <div class="fld w-date"><label for="iDate">양력 생년월일</label>
+      <input id="iDate" type="date"></div>
+    <div class="fld w-time"><label for="iTime">출생시각</label>
+      <input id="iTime" type="time"></div>
+    <div class="chk"><input type="checkbox" id="iNoTime"><label for="iNoTime">시각 모름</label></div>
+    <div class="fld"><label for="iPlace">출생지</label>
+      <select id="iPlace"></select></div>
+    <div class="fld w-lon"><label for="iLon">경도 °E</label>
+      <input id="iLon" type="number" step="0.001" value="126.978"></div>
+    <div class="fld"><label for="iTst">시각 보정</label>
+      <select id="iTst">
+        <option value="lon">경도 보정</option>
+        <option value="full">경도 + 균시차</option>
+        <option value="none">표준시 그대로</option>
+      </select></div>
+    <div class="fld"><label for="iJasi">자시 기준</label>
+      <select id="iJasi">
+        <option value="early">조자시 (23시 이후 다음 날)</option>
+        <option value="late">야자시 (당일 유지)</option>
+      </select></div>
+    <button type="button" class="btn btn-primary" id="bCalc" style="padding:7px 16px">자동 계산</button>
+  </div>
+  <div class="calc-out" id="calcOut" hidden></div>
+  <div class="legend">계산 결과는 초안입니다. 모든 칸은 그대로 고쳐 쓸 수 있고, 고친 칸은 밑줄 표시가 사라집니다.</div>
 </div>
 
 <main id="doc">
@@ -789,11 +913,12 @@ input[type="range"].f:focus-visible::-moz-range-thumb{outline:2px solid var(--ac
 
 </main>
 
+<script src="saju.js"></script>
 <script>
 (function(){
 "use strict";
 
-var STORE = "saju-gamjeongseo-v1";
+var STORE = "saju-studio-v3";
 var DAEUN_ROWS = 8;
 
 /* ── 오행 판별표 (천간·지지, 한자/한글 모두) ───────────────── */
@@ -849,6 +974,8 @@ function readAll(){
   fields.forEach(function(el){ o[el.dataset.k] = el.value; });
   o["__theme"] = document.documentElement.getAttribute("data-theme") || "";
   o["__wxManual"] = wxIsManual() ? "1" : "0";
+  o["__auto"] = fields.filter(function(el){ return el.classList.contains("is-auto"); })
+                      .map(function(el){ return el.dataset.k; }).join(",");
   return o;
 }
 function wxIsManual(){
@@ -865,33 +992,163 @@ function writeAll(o){
   });
   // 직접 입력 여부까지 복원해야, 저장본을 다시 연 뒤에도 명식 수정이 오행에 반영된다
   setWxManual(o["__wxManual"] === "1");
+  var auto = (o["__auto"] || "").split(",").filter(Boolean);
+  fields.forEach(function(el){ el.classList.toggle("is-auto", auto.indexOf(el.dataset.k) >= 0); });
   refreshAll();
 }
 
-/* ── 저장 ─────────────────────────────────────────────────── */
+/* ── 의뢰인 보관함 ─────────────────────────────────────────
+   여러 사람을 동시에 진행할 수 있도록 의뢰인별로 나누어 담는다.
+   손대는 즉시 저장되므로 중간에 덮고 다음 날 이어서 하면 된다. */
 var note = document.getElementById("saveNote");
+var db = { v:3, activeId:null, clients:{} };
 var saveTimer = null;
+
+function newId(){ return "c" + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function nowISO(){ return new Date().toISOString(); }
+
+function loadDB(){
+  try{
+    var raw = localStorage.getItem(STORE);
+    if(raw){ var o = JSON.parse(raw); if(o && o.clients){ db = o; return true; } }
+    // 이전 단일 문서 형식이 남아 있으면 첫 의뢰인으로 옮겨 온다
+    var old1 = localStorage.getItem("saju-gamjeongseo-v1");
+    if(old1){
+      var f = JSON.parse(old1);
+      var id = newId();
+      db = { v:3, activeId:id, clients:{} };
+      db.clients[id] = { id:id, name:(f["c.name"]||"이전 작성분"), createdAt:nowISO(),
+                         updatedAt:nowISO(), birth:{}, fields:f };
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function persist(){
+  try{ localStorage.setItem(STORE, JSON.stringify(db)); return true; }
+  catch(e){ note.textContent = "저장 실패 — 저장 공간 확인"; return false; }
+}
+function current(){ return db.clients[db.activeId] || null; }
+
+function captureInto(c){
+  if(!c) return;
+  c.fields = readAll();
+  c.birth = readBirth();
+  c.name = (c.fields["c.name"] || c.birth.name || c.name || "무명").trim() || "무명";
+  c.updatedAt = nowISO();
+}
 function save(){
   clearTimeout(saveTimer);
   saveTimer = setTimeout(function(){
-    try{
-      localStorage.setItem(STORE, JSON.stringify(readAll()));
+    var c = current(); if(!c) return;
+    captureInto(c);
+    if(persist()){
       var t = new Date();
       note.textContent = "저장됨 " +
         String(t.getHours()).padStart(2,"0")+":"+String(t.getMinutes()).padStart(2,"0");
-    }catch(e){ note.textContent = "저장 실패"; }
+      renderClientBar();
+    }
   }, 350);
 }
 /* 창을 닫거나 탭을 벗어날 때 대기 중인 저장을 즉시 반영한다 —
    마지막에 친 문장이 사라지는 일이 없도록. */
 function flushSave(){
   clearTimeout(saveTimer);
-  try{ localStorage.setItem(STORE, JSON.stringify(readAll())); }catch(e){}
+  var c = current(); if(!c) return;
+  captureInto(c); persist();
 }
 window.addEventListener("beforeunload", flushSave);
 document.addEventListener("visibilitychange", function(){
   if(document.visibilityState === "hidden") flushSave();
 });
+
+function createClient(name, activate){
+  var id = newId();
+  db.clients[id] = { id:id, name:name || "새 의뢰인", createdAt:nowISO(), updatedAt:nowISO(),
+                     birth:{}, fields:{} };
+  if(activate !== false) db.activeId = id;
+  return db.clients[id];
+}
+function openClient(id){
+  if(id === db.activeId) return;
+  flushSave();
+  db.activeId = id;
+  var c = current(); if(!c) return;
+  clearAllFields();
+  writeAll(c.fields || {});
+  writeBirth(c.birth || {});
+  persist(); renderClientBar(); renderClientList();
+  note.textContent = "불러옴";
+  document.getElementById("calcOut").hidden = true;
+}
+function removeClient(id){
+  var c = db.clients[id]; if(!c) return;
+  if(!confirm("'" + c.name + "' 의 작업을 삭제합니다. 되돌릴 수 없습니다.")) return;
+  delete db.clients[id];
+  if(db.activeId === id){
+    var ids = Object.keys(db.clients);
+    if(ids.length){ db.activeId = null; openClient(ids[0]); }
+    else { createClient("새 의뢰인"); clearAllFields(); writeBirth({}); }
+  }
+  persist(); renderClientBar(); renderClientList();
+}
+function sortedClients(){
+  return Object.keys(db.clients).map(function(k){ return db.clients[k]; })
+    .sort(function(a,b){ return (b.updatedAt||"").localeCompare(a.updatedAt||""); });
+}
+function birthLabel(c){
+  var b = c.birth || {};
+  var bits = [];
+  if(b.date) bits.push(b.date + (b.time ? " " + b.time : ""));
+  if(b.sex) bits.push(b.sex === "M" ? "남" : "여");
+  var f = c.fields || {};
+  var gz = [f["ms.gan.nyeon"],f["ms.ji.nyeon"],f["ms.gan.wol"],f["ms.ji.wol"],
+            f["ms.gan.il"],f["ms.ji.il"]].filter(Boolean).join("");
+  if(gz) bits.push(gz);
+  return bits.join(" · ");
+}
+function relTime(iso){
+  if(!iso) return "";
+  var d = (Date.now() - new Date(iso).getTime())/1000;
+  if(d < 60) return "방금";
+  if(d < 3600) return Math.floor(d/60) + "분 전";
+  if(d < 86400) return Math.floor(d/3600) + "시간 전";
+  if(d < 86400*7) return Math.floor(d/86400) + "일 전";
+  return iso.slice(0,10);
+}
+function esc(s){ return String(s||"").replace(/[&<>"]/g, function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+function renderClientBar(){
+  var c = current();
+  document.getElementById("curName").textContent = c ? (c.name || "무명") : "—";
+  var meta = c ? birthLabel(c) : "";
+  var n = Object.keys(db.clients).length;
+  document.getElementById("curMeta").textContent =
+    (meta ? meta + "  " : "") + "(" + n + "명 보관 중)";
+}
+function renderClientList(){
+  var q = (document.getElementById("cSearch").value || "").trim().toLowerCase();
+  var box = document.getElementById("clientList");
+  var list = sortedClients().filter(function(c){
+    return !q || (c.name||"").toLowerCase().indexOf(q) >= 0 || birthLabel(c).toLowerCase().indexOf(q) >= 0;
+  });
+  if(!list.length){ box.innerHTML = '<div class="empty">해당하는 의뢰인이 없습니다</div>'; return; }
+  box.innerHTML = list.map(function(c){
+    return '<div class="crow' + (c.id === db.activeId ? " on" : "") + '" data-id="' + c.id + '">' +
+      '<div class="nm"><b>' + esc(c.name || "무명") + '</b>' +
+      '<span>' + esc(birthLabel(c) || "생년월일 미입력") + ' · ' + relTime(c.updatedAt) + '</span></div>' +
+      '<button type="button" class="del" data-del="' + c.id + '" title="삭제">지움</button></div>';
+  }).join("");
+}
+function clearAllFields(){
+  fields.forEach(function(el){ el.value = ""; el.classList.remove("is-auto"); delete el.dataset.manual; });
+  document.querySelectorAll('[data-k^="wx."],[data-k^="sip."]').forEach(function(el){ el.value = "0"; });
+  var sr = document.getElementById("strRange"); if(sr) sr.value = 50;
+  document.querySelectorAll("#daeunBody td").forEach(function(c){ c.classList.remove("cur"); });
+  setWxManual(false);
+  refreshAll();
+}
 
 /* ── 렌더링 ───────────────────────────────────────────────── */
 /* rows 속성을 최소 높이로 고정한다. 내용이 짧아도 지면이 무너지지 않고,
@@ -1074,12 +1331,16 @@ document.addEventListener("input", function(e){
   var el = e.target.closest("[data-k]");
   if(!el) return;
   if(/^wx\./.test(el.dataset.k)) el.dataset.manual = "1";
+  el.classList.remove("is-auto");     // 손댄 칸은 더 이상 '자동'이 아니다
   autoGrow(el);
   refreshAll();
   save();
 });
 document.addEventListener("change", function(e){
-  if(e.target.closest("[data-k]")){ refreshAll(); save(); }
+  var el = e.target.closest("[data-k]");
+  if(!el) return;
+  el.classList.remove("is-auto");
+  refreshAll(); save();
 });
 
 // 대운 현재 구간 표시
@@ -1115,25 +1376,277 @@ function setMode(view){
 mEdit.addEventListener("click", function(){ setMode(false); });
 mView.addEventListener("click", function(){ setMode(true); });
 
+/* ── 출생 정보 입력 ────────────────────────────────────────── */
+var PLACES = [
+  ["서울",126.978],["인천",126.705],["수원",127.029],["춘천",127.734],["강릉",128.896],
+  ["원주",127.946],["대전",127.385],["세종",127.289],["청주",127.489],["천안",127.114],
+  ["전주",127.148],["광주",126.851],["목포",126.392],["여수",127.662],["대구",128.601],
+  ["안동",128.729],["포항",129.365],["부산",129.075],["울산",129.311],["창원",128.681],
+  ["진주",128.104],["제주",126.531],["평양",125.754],["개성",126.556],["직접 입력",null]
+];
+var iName=g("iName"), iSex=g("iSex"), iDate=g("iDate"), iTime=g("iTime"),
+    iNoTime=g("iNoTime"), iPlace=g("iPlace"), iLon=g("iLon"),
+    iTst=g("iTst"), iJasi=g("iJasi"), calcOut=g("calcOut");
+function g(id){ return document.getElementById(id); }
+
+iPlace.innerHTML = PLACES.map(function(p){
+  return '<option value="'+p[0]+'">'+p[0]+'</option>'; }).join("");
+iPlace.addEventListener("change", function(){
+  var p = PLACES.filter(function(x){ return x[0] === iPlace.value; })[0];
+  if(p && p[1] != null) iLon.value = p[1];
+  saveBirth();
+});
+iNoTime.addEventListener("change", function(){
+  iTime.disabled = iNoTime.checked; saveBirth();
+});
+[iName,iSex,iDate,iTime,iLon,iTst,iJasi].forEach(function(el){
+  el.addEventListener("input", saveBirth);
+  el.addEventListener("change", saveBirth);
+});
+function saveBirth(){
+  var c = current(); if(!c) return;
+  c.birth = readBirth();
+  if(!c.fields || !c.fields["c.name"]) c.name = (iName.value||"").trim() || c.name;
+  c.updatedAt = nowISO(); persist(); renderClientBar();
+}
+function readBirth(){
+  return { name:iName.value, sex:iSex.value, date:iDate.value, time:iTime.value,
+           noTime:iNoTime.checked, place:iPlace.value, lon:iLon.value,
+           tstMode:iTst.value, jasi:iJasi.value };
+}
+function writeBirth(b){
+  b = b || {};
+  iName.value = b.name || ""; iSex.value = b.sex || "M";
+  iDate.value = b.date || "";  iTime.value = b.time || "";
+  iNoTime.checked = !!b.noTime; iTime.disabled = !!b.noTime;
+  iPlace.value = b.place || "서울"; iLon.value = b.lon || 126.978;
+  iTst.value = b.tstMode || "lon"; iJasi.value = b.jasi || "early";
+}
+
+/* ── 자동 계산 ─────────────────────────────────────────────── */
+function setAuto(key, val){
+  var el = document.querySelector('[data-k="' + key + '"]');
+  if(!el) return;
+  el.value = val == null ? "" : String(val);
+  el.classList.add("is-auto");
+}
+function hasWritten(){
+  var keys = ["summary","temperament","p.personality","p.relation","p.career","p.wealth","p.health","advice"];
+  return keys.some(function(k){
+    var el = document.querySelector('[data-k="'+k+'"]');
+    return el && el.value.trim().length > 0;
+  });
+}
+g("bCalc").addEventListener("click", runCalc);
+
+function runCalc(){
+  if(typeof Saju === "undefined"){
+    calcOut.hidden = false;
+    calcOut.innerHTML = '<span class="warn">계산 엔진(saju.js)을 불러오지 못했습니다. ' +
+      'index.html 과 saju.js 를 같은 폴더에 두고 다시 열어 주십시오.</span>';
+    return;
+  }
+  if(!iDate.value){ alert("양력 생년월일을 입력해 주십시오."); iDate.focus(); return; }
+  var dparts = iDate.value.split("-").map(Number);
+  var noTime = iNoTime.checked || !iTime.value;
+  var tparts = noTime ? [12,0] : iTime.value.split(":").map(Number);
+
+  var input = {
+    y:dparts[0], m:dparts[1], d:dparts[2], hour:tparts[0], min:tparts[1],
+    sex:iSex.value, lon:parseFloat(iLon.value) || 126.978,
+    tstMode:iTst.value, jasi:iJasi.value
+  };
+  var a;
+  try { a = Saju.analyze(input); }
+  catch(err){
+    calcOut.hidden = false;
+    calcOut.innerHTML = '<span class="warn">계산에 실패했습니다: ' + esc(err.message) + '</span>';
+    return;
+  }
+
+  var p = a.pillars, W = Saju.WX_HANJA;
+  var POS = ["si","il","wol","nyeon"];
+
+  // 의뢰인 정보
+  setAuto("c.name", iName.value);
+  setAuto("c.sex", iSex.value === "M" ? "남 · 건명" : "여 · 곤명");
+  setAuto("c.solar", iDate.value);
+  setAuto("c.time", noTime ? "시각 미상" : iTime.value);
+  try{
+    var L = Saju.lunarDate(input.y, input.m, input.d);
+    setAuto("c.lunar", L.year + "-" + pad2(L.month) + "-" + pad2(L.day) + (L.leap ? " (윤)" : " (평)"));
+  }catch(e){ setAuto("c.lunar", ""); }
+  setAuto("c.place", iPlace.value === "직접 입력" ? (input.lon + "°E") : iPlace.value);
+  setAuto("c.tst", iTst.value === "none" ? "보정 없음"
+        : (a.chart.tstMinutes >= 0 ? "+" : "") + a.chart.tstMinutes.toFixed(0) + "분 적용");
+  setAuto("c.daeundir", (a.daeun.forward ? "순행" : "역행") + " · " + a.daeun.startAge + "세 대운");
+  if(!document.querySelector('[data-k="meta.date"]').value)
+    setAuto("meta.date", new Date().toISOString().slice(0,10));
+
+  // 명식
+  POS.forEach(function(k){
+    if(noTime && k === "si"){
+      setAuto("ms.gan."+k, ""); setAuto("ms.ji."+k, "");
+      setAuto("ms.sipGan."+k, ""); setAuto("ms.sipJi."+k, "");
+      setAuto("ms.jjg."+k, "");    setAuto("ms.us."+k, "");
+      return;
+    }
+    setAuto("ms.gan."+k, p[k].gan);
+    setAuto("ms.ji."+k,  p[k].ji);
+    setAuto("ms.sipGan."+k, a.sipseong.gan[k]);
+    setAuto("ms.sipJi."+k,  a.sipseong.ji[k]);
+    setAuto("ms.jjg."+k, a.jijang[k]);
+    setAuto("ms.us."+k,  a.unseong[k]);
+  });
+
+  setAuto("hapchung", a.relations.join(", "));
+  setAuto("sinsal", a.sinsal.join(", "));
+
+  // 강약
+  var st = a.strength;
+  setAuto("deuk.ryeong", (st.deukRyeong ? "득령" : "실령") + " (월지 " + p.wol.ji + ")");
+  setAuto("deuk.ji",     (st.deukJi ? "득지" : "실지") + " (일지 " + p.il.ji + ")");
+  setAuto("deuk.se",     (st.deukSe ? "득세" : "실세") + " (아군 " + st.allyCount + "자)");
+  setAuto("deuk.johu",   a.johu.text);
+  setAuto("strength", st.pct);
+
+  // 격국 · 용신
+  setAuto("v.ilgan", p.il.gan + W[Saju.GAN_WX[Saju.GAN.indexOf(p.il.gan)]]);
+  setAuto("v.ilganN", (Saju.GAN.indexOf(p.il.gan) % 2 === 0 ? "양(陽)" : "음(陰)")
+        + " · " + st.label + " " + st.pct + "%");
+  setAuto("v.gyeokguk", a.gyeokguk.name);
+  setAuto("v.gyeokgukN", a.gyeokguk.basis);
+  setAuto("v.yongsin", W[a.yongsin.yong] + " · " + W[a.yongsin.hui]);
+  setAuto("v.yongsinN", a.yongsin.reason);
+  setAuto("v.gisin", W[a.yongsin.gi] + " · " + W[a.yongsin.gu]);
+  setAuto("v.gisinN", "용신 " + W[a.yongsin.yong] + "을 치는 기운");
+
+  // 오행 · 십성 세력
+  setWxManual(false);
+  Saju.WX_KEY.forEach(function(k, i){ setAuto("wx."+k, a.profile.counts[i]); });
+  ["bigeop","siksang","jaeseong","gwanseong","inseong"].forEach(function(k){
+    setAuto("sip."+k, a.profile.sip[k]);
+  });
+
+  // 대운
+  a.daeun.list.forEach(function(r, i){
+    setAuto("du."+i+".age", r.from + "~" + r.to);
+    setAuto("du."+i+".gz", r.gan + r.ji);
+    setAuto("du."+i+".sip", r.sipGan + "·" + r.sipJi);
+    setAuto("du."+i+".luck", r.luck);
+  });
+  // 현재 대운 표시
+  var age = new Date().getFullYear() - input.y + 1;
+  document.querySelectorAll("#daeunBody tr").forEach(function(tr, i){
+    var r = a.daeun.list[i], on = r && age >= r.from && age <= r.to;
+    Array.prototype.forEach.call(tr.cells, function(c){ c.classList.toggle("cur", !!on); });
+  });
+
+  // 세운
+  var yNow = parseInt((document.querySelector('[data-k="meta.date"]').value || "").slice(0,4), 10)
+           || new Date().getFullYear();
+  [[yNow,"this"],[yNow+1,"next"]].forEach(function(pair){
+    var yp = Saju.yearPillar(pair[0]);
+    var sg = Saju.sipseong(a.chart.ilganIdx, Saju.GAN.indexOf(yp.gan));
+    var lk = Saju.luckOf(Saju.GAN_WX[Saju.GAN.indexOf(yp.gan)],
+                         Saju.JI_WX[Saju.JI.indexOf(yp.ji)], a.yongsin);
+    setAuto("se."+pair[1]+"Gz", yp.gan + yp.ji + " · " + sg + " · " + lk);
+  });
+
+  // 개운
+  setAuto("r.wx", a.remedy.wx);
+  setAuto("r.color", a.remedy.color);
+  setAuto("r.dir", a.remedy.dir);
+  setAuto("r.num", a.remedy.num);
+  setAuto("r.time", a.remedy.time);
+
+  refreshAll(); save();
+
+  // 계산 요약
+  var notes = a.chart.notes.slice();
+  if(noTime) notes.push("출생시각을 몰라 시주를 비웠습니다 — 시주에 기대는 해석은 피하십시오");
+  calcOut.hidden = false;
+  calcOut.innerHTML =
+    '<div><span class="gz">' + p.nyeon.gan+p.nyeon.ji + " " + p.wol.gan+p.wol.ji + " " +
+      p.il.gan+p.il.ji + " " + (noTime ? "??" : p.si.gan+p.si.ji) + '</span>' +
+    '&nbsp; 진태양시 ' + pad2(a.chart.tst.hh) + ":" + pad2(a.chart.tst.mm) +
+    ' &nbsp;·&nbsp; ' + a.gyeokguk.name + ' &nbsp;·&nbsp; ' + st.label + ' ' + st.pct + '%' +
+    ' &nbsp;·&nbsp; 용신 ' + W[a.yongsin.yong] +
+    ' &nbsp;·&nbsp; ' + (a.daeun.forward ? "순행" : "역행") + ' ' + a.daeun.startAge + '세 대운</div>' +
+    (notes.length ? '<div class="warn">· ' + notes.map(esc).join('<br>· ') + '</div>'
+                  : '<div class="ok">경계 문제 없음</div>') +
+    '<div style="color:var(--ink-3);margin-top:3px">해석 문장(총평·성격·직업·재물·건강·제언)은 비워 두었습니다. 감정인이 채우는 자리입니다.</div>';
+}
+function pad2(n){ return String(n).padStart(2,"0"); }
+
 /* ── 툴바 동작 ────────────────────────────────────────────── */
-document.getElementById("bPrint").addEventListener("click", function(){
+g("bPrint").addEventListener("click", function(){
   setMode(true); setTimeout(function(){ window.print(); }, 60);
 });
-
-document.getElementById("bExport").addEventListener("click", function(){
-  var data = readAll();
-  var name = (data["c.name"] || "무명").trim().replace(/[\\/:*?"<>|]/g,"");
-  var date = (data["meta.date"] || new Date().toISOString().slice(0,10)).trim();
-  var blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
-  var a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "사주감정서_" + name + "_" + date + ".json";
-  a.click();
-  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+g("bPanel").addEventListener("click", function(){
+  var p = g("calcPanel"); p.hidden = !p.hidden; setTimeout(checkOverflow, 0);
 });
 
-var fileIn = document.getElementById("fileIn");
-document.getElementById("bImport").addEventListener("click", function(){ fileIn.click(); });
+// 의뢰인 목록
+var drop = g("clientDrop");
+function toggleDrop(open){
+  drop.hidden = (open === undefined) ? !drop.hidden : !open;
+  g("bClients").setAttribute("aria-expanded", String(!drop.hidden));
+  if(!drop.hidden){ renderClientList(); g("cSearch").focus(); }
+}
+g("bClients").addEventListener("click", function(e){ e.stopPropagation(); toggleDrop(); });
+document.addEventListener("click", function(e){
+  if(!drop.hidden && !drop.contains(e.target)) toggleDrop(false);
+});
+g("cSearch").addEventListener("input", renderClientList);
+g("clientList").addEventListener("click", function(e){
+  var del = e.target.closest("[data-del]");
+  if(del){ e.stopPropagation(); removeClient(del.dataset.del); return; }
+  var row = e.target.closest(".crow");
+  if(row){ openClient(row.dataset.id); toggleDrop(false); }
+});
+g("bNew").addEventListener("click", function(){
+  flushSave();
+  var c = createClient("새 의뢰인");
+  clearAllFields(); writeBirth({}); calcOut.hidden = true;
+  persist(); renderClientBar(); renderClientList();
+  g("calcPanel").hidden = false; iName.focus();
+  note.textContent = "새 의뢰인";
+});
+g("bDup").addEventListener("click", function(){
+  var c = current(); if(!c) return;
+  captureInto(c);
+  var n = createClient((c.name || "무명") + " (사본)");
+  n.fields = JSON.parse(JSON.stringify(c.fields || {}));
+  n.birth  = JSON.parse(JSON.stringify(c.birth || {}));
+  writeAll(n.fields); writeBirth(n.birth);
+  persist(); renderClientBar(); renderClientList();
+  note.textContent = "복제됨";
+});
+g("bRename").addEventListener("click", function(){
+  var c = current(); if(!c) return;
+  var v = prompt("의뢰인 이름", c.name || "");
+  if(v == null) return;
+  c.name = v.trim() || "무명";
+  var nf = document.querySelector('[data-k="c.name"]');
+  if(nf){ nf.value = c.name; nf.classList.remove("is-auto"); }
+  iName.value = c.name;
+  captureInto(c); persist(); renderClientBar(); renderClientList(); renderEchoes();
+});
+
+// 백업 · 불러오기 (보관함 전체)
+g("bExport").addEventListener("click", function(){
+  flushSave();
+  var blob = new Blob([JSON.stringify(db, null, 2)], {type:"application/json"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "사주감정_보관함_" + new Date().toISOString().slice(0,10) + ".json";
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  note.textContent = Object.keys(db.clients).length + "명 백업";
+});
+var fileIn = g("fileIn");
+g("bImport").addEventListener("click", function(){ fileIn.click(); });
 fileIn.addEventListener("change", function(){
   var f = fileIn.files && fileIn.files[0];
   if(!f) return;
@@ -1141,110 +1654,47 @@ fileIn.addEventListener("change", function(){
   rd.onload = function(){
     try{
       var o = JSON.parse(rd.result);
-      writeAll(o);
-      save();
-      note.textContent = "불러옴";
-    }catch(err){
-      note.textContent = "파일을 읽을 수 없습니다";
-    }
+      var added = 0;
+      if(o && o.clients){
+        if(!confirm("백업 파일의 의뢰인을 현재 보관함에 더합니다. 같은 사람이 있으면 둘 다 남습니다.")) return;
+        Object.keys(o.clients).forEach(function(k){
+          var c = o.clients[k];
+          var id = db.clients[k] ? newId() : k;
+          c.id = id; db.clients[id] = c; added++;
+        });
+      } else {
+        var c2 = createClient((o["c.name"] || "불러온 문서"), false);
+        c2.fields = o; added = 1; db.activeId = c2.id;
+      }
+      flushSave();
+      var ids = Object.keys(db.clients);
+      db.activeId = null; openClient(db.activeId || ids[ids.length-1]);
+      persist(); renderClientBar(); renderClientList();
+      note.textContent = added + "명 불러옴";
+    }catch(err){ note.textContent = "파일을 읽을 수 없습니다"; }
   };
   rd.readAsText(f);
   fileIn.value = "";
 });
 
-document.getElementById("bClear").addEventListener("click", function(){
-  if(!confirm("작성한 내용을 모두 지웁니다. 계속할까요?")) return;
-  fields.forEach(function(el){
-    el.value = el.tagName === "SELECT" ? "" : "";
-    delete el.dataset.manual;
-  });
-  setWxManual(false);
-  document.querySelectorAll('[data-k^="wx."],[data-k^="sip."]').forEach(function(el){ el.value = "0"; });
-  document.getElementById("strRange").value = 50;
-  document.querySelectorAll("#daeunBody td").forEach(function(c){ c.classList.remove("cur"); });
-  refreshAll(); save();
-});
-
-/* ── 예시 데이터 (레이아웃 확인용 가상 자료) ───────────────── */
-var SAMPLE = {
-  "meta.date":"2026-07-30","meta.by":"김서연","meta.school":"자평 · 억부 겸 조후",
-  "c.name":"홍지우","c.sex":"여 · 곤명","c.solar":"1990-08-12","c.time":"10:40",
-  "c.lunar":"1990-06-22 (평)","c.place":"서울","c.tst":"-32분 적용","c.daeundir":"순행 · 7세 대운",
-  "ms.sipGan.si":"정관","ms.sipGan.il":"日元","ms.sipGan.wol":"편인","ms.sipGan.nyeon":"편재",
-  "ms.gan.si":"癸","ms.gan.il":"丙","ms.gan.wol":"甲","ms.gan.nyeon":"庚",
-  "ms.ji.si":"巳","ms.ji.il":"戌","ms.ji.wol":"申","ms.ji.nyeon":"午",
-  "ms.sipJi.si":"비견","ms.sipJi.il":"식신","ms.sipJi.wol":"편재","ms.sipJi.nyeon":"겁재",
-  "ms.jjg.si":"戊庚丙","ms.jjg.il":"辛丁戊","ms.jjg.wol":"戊壬庚","ms.jjg.nyeon":"丙己丁",
-  "ms.us.si":"건록","ms.us.il":"묘","ms.us.wol":"병","ms.us.nyeon":"제왕",
-  "hapchung":"巳申 형합, 午戌 반합화, 巳午 방합화",
-  "sinsal":"역마, 문창귀인, 백호, 홍염",
-  "deuk.ryeong":"실령 (申월 丙화)","deuk.ji":"득지 (戌 중 丁화)",
-  "deuk.se":"득세 (巳午 화기)","deuk.johu":"조열 · 수기 부족",
-  "strength":"62",
-  "v.ilgan":"丙火","v.ilganN":"양(陽) · 한낮의 태양",
-  "v.gyeokguk":"편재격","v.gyeokgukN":"월지 申 정기 庚금 투출",
-  "v.yongsin":"水 · 金","v.yongsinN":"조후 癸수 · 재성 유통",
-  "v.gisin":"火 · 木","v.gisinN":"화기 과다 · 목생화 가중",
-  "summary":"불의 기운이 넉넉한 명식입니다. 여름 끝자락의 丙화 일간이 巳午戌 화기를 얻어 스스로 빛을 내는 힘은 충분하나, 물이 시간 기둥의 癸수 하나뿐이라 열이 식을 자리가 마땅치 않습니다. 재능과 추진력이 앞서 나가는 대신 쉬는 법을 배우지 못한 구조이며, 삶의 과제는 '더 타오르는 것'이 아니라 '식힐 자리를 스스로 만드는 것'에 있습니다. 월지 申금 편재가 뚜렷해 현실 감각과 돈의 흐름을 읽는 눈은 타고났습니다.",
-  "sip.bigeop":"3","sip.siksang":"1","sip.jaeseong":"2","sip.gwanseong":"1","sip.inseong":"1",
-  "keywords":"직진, 승부욕, 현실감각, 조급함, 의리, 번아웃",
-  "temperament":"판단이 빠르고 결론을 먼저 말하는 사람입니다. 비겁이 두터워 남에게 기대지 않고 스스로 해결하려 하며, 그 힘이 신뢰를 얻는 근거인 동시에 혼자 소진되는 원인이 됩니다. 편재의 감각으로 기회를 알아보는 속도는 빠르지만, 식상이 얇아 그 기회를 남에게 설명하고 설득하는 단계에서 손실이 생깁니다.",
-  "t.personality":"뜨겁고 정직한 추진형",
-  "p.personality":"감정을 숨기지 못하는 대신 뒤끝이 없습니다. 옳다고 판단하면 손해를 감수하고도 밀고 나가는 기질이 있어 주변의 신망이 두텁습니다. 다만 화기가 강한 명식은 스스로에게 가장 가혹해지기 쉬우니, 성과가 아닌 상태로 자신을 평가하는 연습이 필요합니다.",
-  "t.relation":"일지 戌 식신 · 34~38세 인연기",
-  "p.relation":"일지에 식신이 앉아 배우자와의 관계에서 돌보고 베푸는 쪽에 서게 됩니다. 관성이 얇아 먼저 다가오는 인연보다 함께 일하며 쌓이는 인연이 자연스럽습니다. 巳申 형합이 있어 가까운 사이일수록 말로 다치게 하는 국면이 반복되니, 중요한 대화는 감정이 식은 뒤로 미루는 습관이 도움이 됩니다.",
-  "t.career":"금융 · 유통 · 데이터 · 자영",
-  "p.career":"편재격에 실물 감각이 더해져 숫자와 흐름을 다루는 일이 잘 맞습니다. 큰 조직의 위계 안에서는 답답함을 느끼기 쉬우니, 성과가 자기 이름으로 남는 구조를 고르는 편이 낫습니다. 완전한 단독 창업보다 실무 파트너를 두는 형태가 안정적입니다.",
-  "t.wealth":"편재형 · 큰 흐름 포착",
-  "p.wealth":"모아서 불리기보다 흐름을 타고 크게 움직이는 재물입니다. 들어오는 속도만큼 나가는 속도도 빨라, 수익의 일정 비율을 손대지 않는 계좌로 강제 분리하는 방식이 가장 잘 맞습니다. 화기가 왕한 해에는 확장 판단이 낙관으로 기울기 쉬우니 이때의 대형 투자는 한 박자 늦추십시오.",
-  "t.health":"심장 · 순환기 · 수면",
-  "p.health":"화 과다 · 수 부족 구조라 열과 압력이 위로 몰립니다. 수면 부족이 가장 먼저 신호로 나타나며, 수분 섭취와 규칙적인 취침 시각만으로도 체감 차이가 큽니다. 의학적 진단이 아닌 경향성 참고입니다.",
-  "du.0.age":"7~16","du.0.gz":"癸未","du.0.sip":"정관","du.0.luck":"평","du.0.kw":"조용한 성장기, 학업 기반",
-  "du.1.age":"17~26","du.1.gz":"壬午","du.1.sip":"편관","du.1.luck":"흉","du.1.kw":"진로 혼선, 시행착오 누적",
-  "du.2.age":"27~36","du.2.gz":"辛巳","du.2.sip":"정재","du.2.luck":"길","du.2.kw":"실무 역량 완성, 재물 기반 형성",
-  "du.3.age":"37~46","du.3.gz":"庚辰","du.3.sip":"편재","du.3.luck":"대길","du.3.kw":"수기 보강, 확장과 결실의 10년",
-  "du.4.age":"47~56","du.4.gz":"己卯","du.4.sip":"상관","du.4.luck":"평","du.4.kw":"방향 전환, 후배 양성",
-  "du.5.age":"57~66","du.5.gz":"戊寅","du.5.sip":"식신","du.5.luck":"흉","du.5.kw":"목생화 가중, 건강 관리기",
-  "du.6.age":"67~76","du.6.gz":"丁丑","du.6.sip":"겁재","du.6.luck":"평","du.6.kw":"축토 습기, 안정 회복",
-  "du.7.age":"77~86","du.7.gz":"丙子","du.7.sip":"비견","du.7.luck":"길","du.7.kw":"자수 조후, 만년 평온",
-  "se.thisGz":"丙午 · 비견","se.thisTxt":"화기가 겹쳐 의욕이 앞서는 해입니다. 새 일을 벌이기보다 벌여 놓은 것을 정리해 수익 구조로 바꾸는 데 힘을 쓰십시오. 5~7월 판단은 한 템포 늦추고, 10월 이후 계약이 유리합니다.",
-  "se.nextGz":"丁未 · 겁재","se.nextTxt":"동업·금전 대여 요청이 들어오기 쉬운 해입니다. 사람 문제로 재물이 새는 형태를 경계하고, 문서는 반드시 조건을 문면에 남기십시오.",
-  "r.wx":"水 · 金","r.color":"남색 · 검정 · 흰색","r.dir":"북 · 서","r.num":"1 · 6 · 4","r.time":"겨울 · 밤",
-  "r.txt":"물가 산책과 충분한 수면이 이 명식에 가장 직접적인 처방입니다. 침실을 북쪽에 두고, 결정을 앞둔 날에는 아침이 아니라 밤에 판단하십시오.",
-  "advice":"타고난 것은 열량입니다. 이 사주는 힘이 모자라 문제가 되는 명식이 아니라, 힘을 쓰는 속도를 스스로 조절해야 하는 명식입니다. 바꿀 수 없는 것은 뜨겁게 몰입하는 기질이고, 선택할 수 있는 것은 그 몰입을 어디에 얼마나 오래 쏟을지입니다.\n37세부터의 庚辰 대운은 이 명식이 기다려 온 구간입니다. 그 전까지의 10년은 성과를 내는 시기가 아니라 성과를 담을 그릇을 만드는 시기로 삼으십시오. 지금 조급하게 앞당긴 결정 하나가, 정작 운이 열렸을 때 쓸 체력을 미리 써 버리는 일이 됩니다.",
-  "contact":"—"
-};
-
-document.getElementById("bSample").addEventListener("click", function(){
-  if(!confirm("예시 데이터로 덮어씁니다. (레이아웃 확인용 가상 자료입니다)")) return;
-  writeAll(SAMPLE);
-  save();
-});
-
 /* ── 단축키 ───────────────────────────────────────────────── */
 document.addEventListener("keydown", function(e){
-  if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s"){
-    e.preventDefault();
-    document.getElementById("bExport").click();
-  }
+  if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s"){ e.preventDefault(); g("bExport").click(); }
+  if(e.key === "Escape" && !drop.hidden) toggleDrop(false);
 });
 
 /* ── 초기화 ───────────────────────────────────────────────── */
 (function init(){
   setFloors();
-  var raw = null;
-  try{ raw = localStorage.getItem(STORE); }catch(e){}
-  if(raw){
-    try{
-      var o = JSON.parse(raw);
-      if(o.__theme) document.documentElement.setAttribute("data-theme", o.__theme);
-      writeAll(o);
-      note.textContent = "이전 작성분 불러옴";
-    }catch(e){ note.textContent = "새 문서"; refreshAll(); }
-  }else{
-    note.textContent = "새 문서";
-    refreshAll();
-  }
+  var had = loadDB();
+  if(!had || !Object.keys(db.clients).length){ createClient("새 의뢰인"); }
+  if(!db.activeId || !db.clients[db.activeId]) db.activeId = Object.keys(db.clients)[0];
+  var c = current();
+  writeAll(c.fields || {});
+  writeBirth(c.birth || {});
+  persist(); renderClientBar(); renderClientList();
+  note.textContent = had ? "이어서 작업" : "새 문서";
+  g("calcPanel").hidden = !!(c.fields && c.fields["ms.gan.il"]);
   window.addEventListener("resize", checkOverflow);
   window.addEventListener("beforeprint", function(){ setMode(true); });
 })();
