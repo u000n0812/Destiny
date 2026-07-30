@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사주 명리 감정서 · 四柱命理 鑑定書</title>
+<style>
+/* ============================================================
+   사주 명리 감정서 — A4 3매 대시보드
+   토큰: 지면은 먹빛 문서(거의 무채색), 색은 오행 데이터에만 사용
+   ============================================================ */
+:root{
+  --paper:#FCFCFB;
+  --panel:#F4F4F0;
+  --panel-2:#EDEDE7;
+  --ink:#15181E;
+  --ink-2:#4A5160;
+  --ink-3:#7C8494;
+  --rule:#DEDED7;
+  --rule-strong:#C3C3BA;
+  --accent:#1F3A5F;      /* 먹청 */
+  --seal:#A62B24;        /* 주사 */
+  --field:rgba(31,58,95,.05);
+  --field-focus:rgba(31,58,95,.11);
+  --desk:#E7E7E2;
+
+  /* 오행 — light (검증 완료: 명도대역·채도·정상시야·대비 통과) */
+  --wx-mok:#1F8A4C;
+  --wx-hwa:#D93A2B;
+  --wx-to:#C6901A;
+  --wx-geum:#B85C8A;
+  --wx-su:#2F6DB5;
+
+  /* 길흉 상태색 — 오행 계열과 분리 */
+  --st-good:#1F6F4A;
+  --st-mid:#6B7280;
+  --st-bad:#A62B24;
+
+  --f-serif:'Nanum Myeongjo','NanumMyeongjo','AppleMyungjo','Apple SD Gothic Neo','Batang','BatangChe','Noto Serif KR',serif;
+  --f-sans:'Pretendard Variable','Pretendard',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','맑은 고딕','Noto Sans KR','Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#1B1E24; --panel:#22262E; --panel-2:#2A2F38;
+    --ink:#ECEEF2; --ink-2:#AFB6C2; --ink-3:#828B99;
+    --rule:#343A45; --rule-strong:#454C59;
+    --accent:#8FB3DE; --seal:#E0736A;
+    --field:rgba(143,179,222,.09); --field-focus:rgba(143,179,222,.17);
+    --desk:#121418;
+    --wx-mok:#2E9A5B; --wx-hwa:#B93F36; --wx-to:#C99A26; --wx-geum:#C46B95; --wx-su:#3F7DC9;
+    --st-good:#4FB07E; --st-mid:#98A0AE; --st-bad:#E0736A;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#1B1E24; --panel:#22262E; --panel-2:#2A2F38;
+  --ink:#ECEEF2; --ink-2:#AFB6C2; --ink-3:#828B99;
+  --rule:#343A45; --rule-strong:#454C59;
+  --accent:#8FB3DE; --seal:#E0736A;
+  --field:rgba(143,179,222,.09); --field-focus:rgba(143,179,222,.17);
+  --desk:#121418;
+  --wx-mok:#2E9A5B; --wx-hwa:#B93F36; --wx-to:#C99A26; --wx-geum:#C46B95; --wx-su:#3F7DC9;
+  --st-good:#4FB07E; --st-mid:#98A0AE; --st-bad:#E0736A;
+}
+:root[data-theme="light"]{
+  --paper:#FCFCFB; --panel:#F4F4F0; --panel-2:#EDEDE7;
+  --ink:#15181E; --ink-2:#4A5160; --ink-3:#7C8494;
+  --rule:#DEDED7; --rule-strong:#C3C3BA;
+  --accent:#1F3A5F; --seal:#A62B24;
+  --field:rgba(31,58,95,.05); --field-focus:rgba(31,58,95,.11);
+  --desk:#E7E7E2;
+  --wx-mok:#1F8A4C; --wx-hwa:#D93A2B; --wx-to:#C6901A; --wx-geum:#B85C8A; --wx-su:#2F6DB5;
+  --st-good:#1F6F4A; --st-mid:#6B7280; --st-bad:#A62B24;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--desk); color:var(--ink);
+  font-family:var(--f-sans);
+  font-size:9.4pt; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ---------- 툴바 ---------- */
+.toolbar{
+  position:sticky; top:0; z-index:50;
+  display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+  padding:9px 14px;
+  background:var(--paper); border-bottom:1px solid var(--rule-strong);
+}
+.tb-title{font-family:var(--f-serif); font-size:11.5pt; letter-spacing:.06em; margin-right:4px}
+.tb-title small{display:block; font-family:var(--f-sans); font-size:7pt; letter-spacing:.16em; color:var(--ink-3)}
+.tb-spacer{flex:1}
+.btn{
+  font:inherit; font-size:8.6pt; color:var(--ink);
+  background:var(--panel); border:1px solid var(--rule-strong);
+  padding:5px 11px; border-radius:2px; cursor:pointer;
+}
+.btn:hover{background:var(--panel-2)}
+.btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.btn-primary{background:var(--accent); border-color:var(--accent); color:var(--paper)}
+.btn-primary:hover{filter:brightness(1.12)}
+.seg{display:inline-flex; border:1px solid var(--rule-strong); border-radius:2px; overflow:hidden}
+.seg button{font:inherit; font-size:8.6pt; padding:5px 12px; border:0; background:var(--panel); color:var(--ink-2); cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent); color:var(--paper)}
+.seg button:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+.savenote{font-size:7.6pt; color:var(--ink-3); letter-spacing:.02em; min-width:74px}
+
+/* ---------- 지면 ---------- */
+#doc{display:flex; flex-direction:column; align-items:center; gap:18px; padding:22px 14px 60px}
+.page{
+  position:relative;
+  width:210mm; height:296.9mm;
+  padding:13mm 14mm 11mm;
+  background:var(--paper);
+  box-shadow:0 1px 3px rgba(0,0,0,.13), 0 10px 30px rgba(0,0,0,.10);
+  display:flex; flex-direction:column;
+}
+.page-no{
+  position:absolute; left:0; right:0; bottom:6mm;
+  text-align:center; font-size:7pt; letter-spacing:.22em; color:var(--ink-3);
+}
+.page-no::before{content:"— "} .page-no::after{content:" —"}
+.overflow-flag{
+  position:absolute; right:6mm; bottom:5mm;
+  font-size:7.2pt; color:var(--paper); background:var(--seal);
+  padding:2px 8px; border-radius:2px; display:none;
+}
+.page.is-over .overflow-flag{display:block}
+
+/* ---------- 표제부 ---------- */
+.sheet-head{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:16px;
+  padding-bottom:6px; border-bottom:1.6px solid var(--accent);
+}
+.sheet-head h1{
+  margin:0; font-family:var(--f-serif); font-weight:600;
+  font-size:17pt; letter-spacing:.14em; line-height:1.15;
+}
+.sheet-head .hanja{display:block; font-size:8.4pt; letter-spacing:.42em; color:var(--ink-3); margin-top:3px}
+.head-meta{text-align:right; font-size:8pt; color:var(--ink-2); display:grid; gap:2px; min-width:52mm}
+.head-meta div{display:flex; justify-content:flex-end; gap:6px; align-items:baseline}
+.head-meta b{font-weight:500; color:var(--ink-3); font-size:7.2pt; letter-spacing:.08em}
+
+/* ---------- 공통 섹션 ---------- */
+.sec{display:flex; flex-direction:column; gap:5px}
+/* 지면이 모자랄 때 내용이 조용히 눌리지 않고 넘치도록 — 넘침 경고의 전제 */
+.stack > *{flex-shrink:0}
+.grow{flex:1 0 auto; min-height:0}
+.sec-h{
+  display:flex; align-items:baseline; gap:8px;
+  border-bottom:1px solid var(--rule); padding-bottom:3px;
+}
+.sec-h h2{
+  margin:0; font-family:var(--f-serif); font-size:10.8pt; font-weight:600; letter-spacing:.06em;
+}
+.sec-h .hj{font-size:7.6pt; letter-spacing:.2em; color:var(--ink-3)}
+.sec-h .hint{margin-left:auto; font-size:7pt; color:var(--ink-3); letter-spacing:.02em}
+.stack{display:flex; flex-direction:column; gap:9px; flex:1; min-height:0}
+.row-2{display:grid; grid-template-columns:1fr 1fr; gap:9px}
+.row-2u{display:grid; grid-template-columns:1.15fr .85fr; gap:10px}
+
+/* ---------- 입력 필드(인쇄시 평문) ---------- */
+.f, textarea.f{
+  font:inherit; color:var(--ink); width:100%;
+  background:var(--field); border:0; border-radius:2px;
+  padding:2px 5px; resize:none; overflow:hidden;
+  font-family:inherit;
+}
+.f::placeholder{color:var(--ink-3); opacity:.7}
+.f:focus{outline:0; background:var(--field-focus); box-shadow:inset 0 -1.5px 0 var(--accent)}
+textarea.f{line-height:1.55; display:block}
+select.f{-webkit-appearance:none; appearance:none; cursor:pointer; padding-right:14px}
+.mode-view .f{background:transparent!important; box-shadow:none!important}
+.mode-view .f::placeholder{color:transparent}
+
+/* 의뢰인 정보 스트립 */
+.client{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:0;
+  border:1px solid var(--rule); border-radius:2px; overflow:hidden;
+}
+.client .cell{padding:4px 7px; border-right:1px solid var(--rule); border-bottom:1px solid var(--rule); min-width:0}
+.client .cell:nth-child(4n){border-right:0}
+.client .cell:nth-last-child(-n+4){border-bottom:0}
+.lbl{display:block; font-size:6.8pt; letter-spacing:.13em; color:var(--ink-3); margin-bottom:1px}
+.client .f{font-size:9pt}
+
+/* ---------- 명식 ---------- */
+.mingsik{border:1px solid var(--rule-strong); border-radius:2px; overflow:hidden}
+.ms-grid{display:grid; grid-template-columns:17mm repeat(4,1fr)}
+.ms-grid > *{border-right:1px solid var(--rule); border-bottom:1px solid var(--rule); padding:2.5px 4px; min-width:0}
+.ms-grid > *:nth-child(5n){border-right:0}
+.ms-rowlbl{
+  background:var(--panel); font-size:6.9pt; letter-spacing:.09em; color:var(--ink-2);
+  display:flex; align-items:center; justify-content:flex-end; text-align:right;
+}
+.ms-head{
+  background:var(--panel); text-align:center; padding:4px 4px 5px;
+}
+.ms-head .pil{font-family:var(--f-serif); font-size:10.4pt; letter-spacing:.1em; display:block}
+.ms-head .pil-sub{font-size:6.6pt; letter-spacing:.1em; color:var(--ink-3); display:block; margin-top:1px}
+.ms-cell{text-align:center}
+.ms-cell .f{text-align:center}
+.ms-sip .f{font-size:8.4pt; color:var(--ink-2)}
+.gz{padding:0!important}
+.gz .f{
+  font-family:var(--f-serif); font-size:23pt; line-height:1.24;
+  text-align:center; padding:3px 2px 4px; letter-spacing:.02em;
+  background:transparent;
+}
+.gz.wx-mok .f{color:var(--wx-mok)} .gz.wx-hwa .f{color:var(--wx-hwa)}
+.gz.wx-to .f{color:var(--wx-to)}   .gz.wx-geum .f{color:var(--wx-geum)}
+.gz.wx-su .f{color:var(--wx-su)}
+.gz{position:relative}
+.gz .wxtag{
+  position:absolute; top:2px; right:3px;
+  font-size:6.4pt; letter-spacing:.06em; color:var(--ink-3);
+}
+.gz.wx-mok .wxtag{color:var(--wx-mok)} .gz.wx-hwa .wxtag{color:var(--wx-hwa)}
+.gz.wx-to .wxtag{color:var(--wx-to)}   .gz.wx-geum .wxtag{color:var(--wx-geum)}
+.gz.wx-su .wxtag{color:var(--wx-su)}
+.gz.gan{background:var(--panel-2)}
+.ms-small .f{font-size:7.4pt; color:var(--ink-2); letter-spacing:.01em}
+.ms-grid > .ms-last{border-bottom:0}
+
+/* ---------- 칩 ---------- */
+.chipfield{display:flex; flex-direction:column; gap:3px}
+.chips{display:flex; flex-wrap:wrap; gap:3px; min-height:0}
+.chip{
+  font-size:7.6pt; letter-spacing:.03em; padding:1.5px 7px;
+  border:1px solid var(--rule-strong); border-radius:9px; color:var(--ink-2);
+  background:var(--panel);
+}
+.chip.on-seal{border-color:var(--seal); color:var(--seal)}
+.chips:empty{display:none}
+.mode-view .chipinput, .chips-hasitems + .chipinput{}
+
+/* ---------- 오행 막대 ---------- */
+.bars{display:flex; flex-direction:column; gap:3.5px}
+.bar{display:grid; grid-template-columns:15mm 1fr 15mm; align-items:center; gap:6px}
+.bar .name{display:flex; align-items:center; gap:4px; font-size:8pt}
+.bar .glyph{
+  font-family:var(--f-serif); font-size:11pt; line-height:1;
+  width:15px; text-align:center;
+}
+.bar .kor{font-size:7.4pt; color:var(--ink-2)}
+.track{position:relative; height:9px; background:var(--panel-2); border-radius:2px; overflow:hidden}
+.fill{position:absolute; inset:0 auto 0 0; border-radius:2px; width:0}
+.bar .val{
+  text-align:right; font-size:8pt; font-variant-numeric:tabular-nums; color:var(--ink-2);
+  display:flex; justify-content:flex-end; align-items:baseline; gap:4px;
+}
+.bar .val input{width:26px; text-align:right; font-variant-numeric:tabular-nums}
+.bar .pct{font-size:7pt; color:var(--ink-3); min-width:24px}
+.bar.wx-mok .fill{background:var(--wx-mok)} .bar.wx-mok .glyph{color:var(--wx-mok)}
+.bar.wx-hwa .fill{background:var(--wx-hwa)} .bar.wx-hwa .glyph{color:var(--wx-hwa)}
+.bar.wx-to .fill{background:var(--wx-to)}   .bar.wx-to .glyph{color:var(--wx-to)}
+.bar.wx-geum .fill{background:var(--wx-geum)} .bar.wx-geum .glyph{color:var(--wx-geum)}
+.bar.wx-su .fill{background:var(--wx-su)}   .bar.wx-su .glyph{color:var(--wx-su)}
+.bar.is-zero .track{box-shadow:inset 0 0 0 1px var(--seal)}
+.bars-foot{display:flex; justify-content:space-between; font-size:7pt; color:var(--ink-3); margin-top:1px}
+.bars-foot .warn{color:var(--seal)}
+
+/* 십성 세력 — 단일 색상(크기 비교) */
+.bar.mono .fill{background:var(--accent)}
+.bar.mono .glyph{color:var(--accent); font-size:9.6pt; width:auto; white-space:nowrap; letter-spacing:.04em}
+
+/* ---------- 판단 카드 ---------- */
+.cards{display:grid; grid-template-columns:repeat(4,1fr); gap:7px}
+.card{
+  border:1px solid var(--rule); border-top:2px solid var(--accent);
+  border-radius:2px; padding:5px 7px 6px; display:flex; flex-direction:column; gap:1px; min-width:0;
+}
+.card.on-seal{border-top-color:var(--seal)}
+.card .k{font-size:6.8pt; letter-spacing:.14em; color:var(--ink-3)}
+.card .v .f{font-family:var(--f-serif); font-size:12.4pt; padding:0 2px; letter-spacing:.03em}
+.card .n .f{font-size:7.6pt; color:var(--ink-2); padding:0 2px}
+.card.on-seal .v .f{color:var(--seal)}
+
+/* 신강신약 저울 */
+.scale{display:flex; flex-direction:column; gap:3px}
+.scale-track{position:relative; height:10px; background:var(--panel-2); border-radius:2px}
+.scale-track::after{content:""; position:absolute; left:50%; top:-2px; bottom:-2px; width:1px; background:var(--rule-strong)}
+.scale-mark{
+  position:absolute; top:-3px; width:3px; height:16px; border-radius:1px;
+  background:var(--accent); transform:translateX(-50%); left:50%;
+}
+.scale-ends{display:flex; justify-content:space-between; font-size:6.8pt; color:var(--ink-3); letter-spacing:.1em}
+input[type="range"].f{-webkit-appearance:none; appearance:none; height:14px; background:transparent; cursor:pointer}
+input[type="range"].f:focus{background:transparent; box-shadow:none}
+input[type="range"].f::-webkit-slider-runnable-track{height:2px; border-radius:1px; background:var(--rule-strong)}
+input[type="range"].f::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none; width:11px; height:11px; margin-top:-4.5px;
+  border:0; border-radius:50%; background:var(--accent);
+}
+input[type="range"].f::-moz-range-track{height:2px; border-radius:1px; background:var(--rule-strong)}
+input[type="range"].f::-moz-range-thumb{width:11px; height:11px; border:0; border-radius:50%; background:var(--accent)}
+input[type="range"].f:focus-visible::-webkit-slider-thumb{outline:2px solid var(--accent); outline-offset:2px}
+input[type="range"].f:focus-visible::-moz-range-thumb{outline:2px solid var(--accent); outline-offset:2px}
+
+/* ---------- 본문 블록 ---------- */
+.block{display:flex; flex-direction:column; gap:3px}
+.block .bh{display:flex; align-items:baseline; gap:6px}
+.block .bh h3{margin:0; font-size:9.2pt; font-weight:600; letter-spacing:.03em}
+.block .bh .hj{font-size:7pt; letter-spacing:.14em; color:var(--ink-3)}
+.block .bh .tagin{margin-left:auto; width:auto; max-width:44mm; font-size:7.6pt; text-align:right; color:var(--ink-2)}
+.prose .f{font-size:9pt; line-height:1.62}
+
+/* ---------- 대운표 ---------- */
+.daeun{width:100%; border-collapse:collapse; table-layout:fixed}
+.daeun th,.daeun td{border:1px solid var(--rule); padding:0; text-align:center}
+.daeun th{
+  background:var(--panel); font-size:6.9pt; font-weight:500;
+  letter-spacing:.1em; color:var(--ink-2); padding:3px 2px;
+}
+.daeun td .f{text-align:center; font-size:8pt; padding:2.5px 3px; border-radius:0}
+.daeun td.gz-cell .f{font-family:var(--f-serif); font-size:12pt; padding:1px 3px 2px}
+.daeun td.age .f{font-variant-numeric:tabular-nums; color:var(--ink-2); font-size:7.8pt}
+.daeun td.kw .f{text-align:left; font-size:7.6pt; color:var(--ink-2)}
+.daeun td.luck{padding:2px}
+.luckpick{
+  font:inherit; font-size:7.6pt; letter-spacing:.06em; width:100%;
+  border:1px solid transparent; border-radius:9px; padding:1.5px 2px;
+  text-align:center; -webkit-appearance:none; appearance:none; cursor:pointer;
+  background:var(--panel); color:var(--ink-2);
+}
+.luckpick:focus{outline:2px solid var(--accent); outline-offset:1px}
+.luckpick[data-luck="대길"],.luckpick[data-luck="길"]{color:var(--st-good); border-color:var(--st-good)}
+.luckpick[data-luck="평"]{color:var(--st-mid); border-color:var(--st-mid)}
+.luckpick[data-luck="흉"],.luckpick[data-luck="대흉"]{color:var(--st-bad); border-color:var(--st-bad)}
+.daeun td.cur{box-shadow:inset 0 0 0 2px var(--accent)}
+
+/* ---------- 개운법 ---------- */
+.remedy{display:grid; grid-template-columns:repeat(5,1fr); gap:7px}
+.rcell{border:1px solid var(--rule); border-radius:2px; padding:5px 7px; display:flex; flex-direction:column; gap:1px}
+.rcell .k{font-size:6.8pt; letter-spacing:.13em; color:var(--ink-3)}
+.rcell .f{font-size:8.8pt; padding:0 2px}
+
+/* ---------- 낙관 / 꼬리말 ---------- */
+.signoff{display:flex; align-items:flex-end; gap:14px; margin-top:auto; padding-top:8px}
+.signoff .disc{
+  flex:1; font-size:6.9pt; line-height:1.6; color:var(--ink-3);
+  border-top:1px solid var(--rule); padding-top:5px;
+}
+.seal-wrap{display:flex; flex-direction:column; align-items:center; gap:4px}
+.seal-line{font-size:7.4pt; color:var(--ink-2); letter-spacing:.06em}
+.seal{
+  width:20mm; height:20mm; border:2px solid var(--seal); border-radius:2px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:1mm;
+}
+.seal span{
+  font-family:var(--f-serif); color:var(--seal);
+  font-size:11pt; line-height:1.18; text-align:center;
+}
+
+/* ---------- 인쇄 ---------- */
+@page{size:A4 portrait; margin:0}
+@media print{
+  :root, :root[data-theme="dark"], :root[data-theme="light"]{
+    --paper:#FFFFFF; --panel:#F4F4F0; --panel-2:#EBEBE5;
+    --ink:#111318; --ink-2:#454C5A; --ink-3:#6E7686;
+    --rule:#D6D6CE; --rule-strong:#B4B4AA;
+    --accent:#1F3A5F; --seal:#A62B24; --field:transparent; --field-focus:transparent;
+    --wx-mok:#1F8A4C; --wx-hwa:#D93A2B; --wx-to:#C6901A; --wx-geum:#B85C8A; --wx-su:#2F6DB5;
+    --st-good:#1F6F4A; --st-mid:#6B7280; --st-bad:#A62B24;
+  }
+  html,body{background:#fff}
+  body{-webkit-print-color-adjust:exact; print-color-adjust:exact}
+  .toolbar,.overflow-flag,.chipinput,.no-print{display:none!important}
+  #doc{display:block; padding:0; gap:0}
+  .page{
+    box-shadow:none; margin:0;
+    width:210mm; height:296.9mm;
+    break-after:page; page-break-after:always;
+  }
+  .page:last-child{break-after:auto; page-break-after:auto}
+  .f{background:transparent!important; box-shadow:none!important}
+  .f::placeholder{color:transparent!important}
+  select.f, .luckpick{border-color:transparent}
+  .luckpick[data-luck="대길"],.luckpick[data-luck="길"]{border-color:var(--st-good)}
+  .luckpick[data-luck="평"]{border-color:var(--st-mid)}
+  .luckpick[data-luck="흉"],.luckpick[data-luck="대흉"]{border-color:var(--st-bad)}
+}
+/* screen 한정 — A4 인쇄 폭(약 794px)이 이 조건에 걸려 지면 높이를 무너뜨리는 것을 막는다 */
+@media screen and (max-width:900px){
+  .page{width:100%; height:auto; min-height:0; padding:16px}
+  .cards{grid-template-columns:repeat(2,1fr)}
+  .remedy{grid-template-columns:repeat(2,1fr)}
+  .row-2,.row-2u{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+</style>
+</head>
+<body class="mode-edit">
+
+<div class="toolbar no-print">
+  <div class="tb-title">사주 명리 감정서<small>SAJU APPRAISAL SHEET</small></div>
+  <div class="seg" role="group" aria-label="보기 모드">
+    <button type="button" id="mEdit" aria-pressed="true">작성</button>
+    <button type="button" id="mView" aria-pressed="false">미리보기</button>
+  </div>
+  <span class="savenote" id="saveNote">불러오는 중</span>
+  <div class="tb-spacer"></div>
+  <button type="button" class="btn" id="bSample">예시 채우기</button>
+  <button type="button" class="btn" id="bImport">불러오기</button>
+  <button type="button" class="btn" id="bExport">JSON 저장</button>
+  <button type="button" class="btn" id="bClear">비우기</button>
+  <button type="button" class="btn btn-primary" id="bPrint">인쇄 · PDF</button>
+  <input type="file" id="fileIn" accept="application/json" hidden>
+</div>
+
+<main id="doc">
+
+<!-- ══════════════════ 1면 · 명식과 구조 ══════════════════ -->
+<section class="page" id="page1">
+  <div class="stack">
+
+    <header class="sheet-head">
+      <h1>사주 명리 감정서<span class="hanja">四柱命理鑑定書</span></h1>
+      <div class="head-meta">
+        <div><b>감정일</b><input class="f" style="width:26mm;text-align:right" data-k="meta.date" placeholder="2026-07-30"></div>
+        <div><b>감정인</b><input class="f" style="width:26mm;text-align:right" data-k="meta.by" placeholder="상담사명"></div>
+        <div><b>관법</b><input class="f" style="width:26mm;text-align:right" data-k="meta.school" placeholder="자평 · 억부"></div>
+      </div>
+    </header>
+
+    <!-- 1. 사주 세우기 -->
+    <div class="sec">
+      <div class="sec-h"><h2>의뢰인</h2><span class="hj">依賴人</span></div>
+      <div class="client">
+        <div class="cell"><span class="lbl">성명</span><input class="f" data-k="c.name" placeholder="홍길동"></div>
+        <div class="cell"><span class="lbl">성별</span><input class="f" data-k="c.sex" placeholder="여 / 곤명"></div>
+        <div class="cell"><span class="lbl">양력 생년월일</span><input class="f" data-k="c.solar" placeholder="1990-08-12"></div>
+        <div class="cell"><span class="lbl">출생시각</span><input class="f" data-k="c.time" placeholder="10:40"></div>
+        <div class="cell"><span class="lbl">음력</span><input class="f" data-k="c.lunar" placeholder="1990-06-22 (평)"></div>
+        <div class="cell"><span class="lbl">출생지</span><input class="f" data-k="c.place" placeholder="서울"></div>
+        <div class="cell"><span class="lbl">진태양시 보정</span><input class="f" data-k="c.tst" placeholder="-32분 적용"></div>
+        <div class="cell"><span class="lbl">대운 방향 · 수</span><input class="f" data-k="c.daeundir" placeholder="순행 · 7세 대운"></div>
+      </div>
+    </div>
+
+    <!-- 2. 명식 -->
+    <div class="sec">
+      <div class="sec-h"><h2>사주 명식</h2><span class="hj">四柱命式</span>
+        <span class="hint">천간·지지를 입력하면 오행이 자동 판별됩니다</span></div>
+      <div class="mingsik">
+        <div class="ms-grid">
+          <div class="ms-rowlbl" style="background:var(--panel)"></div>
+          <div class="ms-head"><span class="pil">時柱</span><span class="pil-sub">시주 · 자녀/말년</span></div>
+          <div class="ms-head"><span class="pil">日柱</span><span class="pil-sub">일주 · 본인/배우자</span></div>
+          <div class="ms-head"><span class="pil">月柱</span><span class="pil-sub">월주 · 부모/사회</span></div>
+          <div class="ms-head"><span class="pil">年柱</span><span class="pil-sub">년주 · 조상/초년</span></div>
+
+          <div class="ms-rowlbl">천간 십성</div>
+          <div class="ms-cell ms-sip"><input class="f" data-k="ms.sipGan.si" placeholder="―"></div>
+          <div class="ms-cell ms-sip"><input class="f" data-k="ms.sipGan.il" placeholder="日元"></div>
+          <div class="ms-cell ms-sip"><input class="f" data-k="ms.sipGan.wol" placeholder="―"></div>
+          <div class="ms-cell ms-sip"><input class="f" data-k="ms.sipGan.nyeon" placeholder="―"></div>
+
+          <div class="ms-rowlbl">천간 天干</div>
+          <div class="ms-cell gz gan" data-wx-for="ms.gan.si"><span class="wxtag"></span><input class="f" data-k="ms.gan.si" data-wx maxlength="3" placeholder="癸"></div>
+          <div class="ms-cell gz gan" data-wx-for="ms.gan.il"><span class="wxtag"></span><input class="f" data-k="ms.gan.il" data-wx maxlength="3" placeholder="丙"></div>
+          <div class="ms-cell gz gan" data-wx-for="ms.gan.wol"><span class="wxtag"></span><input class="f" data-k="ms.gan.wol" data-wx maxlength="3" placeholder="甲"></div>
+          <div class="ms-cell gz gan" data-wx-for="ms.gan.nyeon"><span class="wxtag"></span><input class="f" data-k="ms.gan.nyeon" data-wx maxlength="3" placeholder="庚"></div>
+
+          <div class="ms-rowlbl">지지 地支</div>
+          <div class="ms-cell gz" data-wx-for="ms.ji.si"><span class="wxtag"></span><input class="f" data-k="ms.ji.si" data-wx maxlength="3" placeholder="巳"></div>
+          <div class="ms-cell gz" data-wx-for="ms.ji.il"><span class="wxtag"></span><input class="f" data-k="ms.ji.il" data-wx maxlength="3" placeholder="戌"></div>
+          <div class="ms-cell gz" data-wx-for="ms.ji.wol"><span class="wxtag"></span><input class="f" data-k="ms.ji.wol" data-wx maxlength="3" placeholder="申"></div>
+          <div class="ms-cell gz" data-wx-for="ms.ji.nyeon"><span class="wxtag"></span><input class="f" data-k="ms.ji.nyeon" data-wx maxlength="3" placeholder="午"></div>
+
+          <div class="ms-rowlbl">지지 십성</div>
+          <div class="ms-cell ms-sip"><input class="f" data-k="ms.sipJi.si" placeholder="―"></div>
+          <div class="ms-cell ms-sip"><input class="f" data-k="ms.sipJi.il" placeholder="―"></div>
+          <div class="ms-cell ms-sip"><input class="f" data-k="ms.sipJi.wol" placeholder="―"></div>
+          <div class="ms-cell ms-sip"><input class="f" data-k="ms.sipJi.nyeon" placeholder="―"></div>
+
+          <div class="ms-rowlbl">지장간</div>
+          <div class="ms-cell ms-small"><input class="f" data-k="ms.jjg.si" placeholder="戊庚丙"></div>
+          <div class="ms-cell ms-small"><input class="f" data-k="ms.jjg.il" placeholder="辛丁戊"></div>
+          <div class="ms-cell ms-small"><input class="f" data-k="ms.jjg.wol" placeholder="戊壬庚"></div>
+          <div class="ms-cell ms-small"><input class="f" data-k="ms.jjg.nyeon" placeholder="丙己丁"></div>
+
+          <div class="ms-rowlbl ms-last">십이운성</div>
+          <div class="ms-cell ms-small ms-last"><input class="f" data-k="ms.us.si" placeholder="건록"></div>
+          <div class="ms-cell ms-small ms-last"><input class="f" data-k="ms.us.il" placeholder="묘"></div>
+          <div class="ms-cell ms-small ms-last"><input class="f" data-k="ms.us.wol" placeholder="병"></div>
+          <div class="ms-cell ms-small ms-last"><input class="f" data-k="ms.us.nyeon" placeholder="제왕"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 형충회합 · 신살 -->
+    <div class="row-2">
+      <div class="sec">
+        <div class="sec-h"><h2>형충회합</h2><span class="hj">刑沖會合</span></div>
+        <div class="chipfield">
+          <div class="chips" id="chips-hc"></div>
+          <input class="f chipinput" data-k="hapchung" data-chips="chips-hc"
+                 placeholder="예: 巳申합수, 午戌반합화, 寅申충 (쉼표 구분)">
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-h"><h2>신살</h2><span class="hj">神殺</span></div>
+        <div class="chipfield">
+          <div class="chips" id="chips-ss"></div>
+          <input class="f chipinput" data-k="sinsal" data-chips="chips-ss"
+                 placeholder="예: 도화, 역마, 화개, 백호 (쉼표 구분)">
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. 오행 · 강약 -->
+    <div class="row-2u">
+      <div class="sec">
+        <div class="sec-h"><h2>오행 분포</h2><span class="hj">五行分布</span>
+          <span class="hint" id="wxMode">명식에서 자동 집계</span></div>
+        <div class="bars" id="wxBars">
+          <div class="bar wx-mok"><div class="name"><span class="glyph">木</span><span class="kor">목</span></div>
+            <div class="track"><div class="fill"></div></div>
+            <div class="val"><input class="f" data-k="wx.mok" inputmode="numeric" value="0"><span class="pct">0%</span></div></div>
+          <div class="bar wx-hwa"><div class="name"><span class="glyph">火</span><span class="kor">화</span></div>
+            <div class="track"><div class="fill"></div></div>
+            <div class="val"><input class="f" data-k="wx.hwa" inputmode="numeric" value="0"><span class="pct">0%</span></div></div>
+          <div class="bar wx-to"><div class="name"><span class="glyph">土</span><span class="kor">토</span></div>
+            <div class="track"><div class="fill"></div></div>
+            <div class="val"><input class="f" data-k="wx.to" inputmode="numeric" value="0"><span class="pct">0%</span></div></div>
+          <div class="bar wx-geum"><div class="name"><span class="glyph">金</span><span class="kor">금</span></div>
+            <div class="track"><div class="fill"></div></div>
+            <div class="val"><input class="f" data-k="wx.geum" inputmode="numeric" value="0"><span class="pct">0%</span></div></div>
+          <div class="bar wx-su"><div class="name"><span class="glyph">水</span><span class="kor">수</span></div>
+            <div class="track"><div class="fill"></div></div>
+            <div class="val"><input class="f" data-k="wx.su" inputmode="numeric" value="0"><span class="pct">0%</span></div></div>
+        </div>
+        <div class="bars-foot">
+          <span id="wxSum">합 0자</span>
+          <span id="wxMissing"></span>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-h"><h2>강약 판단</h2><span class="hj">强弱</span></div>
+        <div class="scale">
+          <div class="scale-track"><div class="scale-mark" id="scaleMark"></div></div>
+          <div class="scale-ends"><span>신약 身弱</span><span>중화</span><span>신강 身强</span></div>
+          <input class="f no-print" type="range" min="0" max="100" step="5" value="50" data-k="strength" id="strRange"
+                 style="padding:0;background:transparent" aria-label="신강신약 위치">
+        </div>
+        <div class="row-2" style="gap:6px">
+          <div><span class="lbl">득령 得令</span><input class="f" data-k="deuk.ryeong" placeholder="실령"></div>
+          <div><span class="lbl">득지 得地</span><input class="f" data-k="deuk.ji" placeholder="득지"></div>
+          <div><span class="lbl">득세 得勢</span><input class="f" data-k="deuk.se" placeholder="실세"></div>
+          <div><span class="lbl">한난조습</span><input class="f" data-k="deuk.johu" placeholder="조열"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. 격국 · 용신 -->
+    <div class="sec">
+      <div class="sec-h"><h2>격국과 용신</h2><span class="hj">格局·用神</span></div>
+      <div class="cards">
+        <div class="card"><span class="k">일간 日干</span>
+          <span class="v"><input class="f" data-k="v.ilgan" placeholder="丙火"></span>
+          <span class="n"><input class="f" data-k="v.ilganN" placeholder="양(陽) · 태양의 불"></span></div>
+        <div class="card"><span class="k">격국 格局</span>
+          <span class="v"><input class="f" data-k="v.gyeokguk" placeholder="편재격"></span>
+          <span class="n"><input class="f" data-k="v.gyeokgukN" placeholder="월지 申 정기 庚"></span></div>
+        <div class="card"><span class="k">용신 · 희신</span>
+          <span class="v"><input class="f" data-k="v.yongsin" placeholder="木 · 水"></span>
+          <span class="n"><input class="f" data-k="v.yongsinN" placeholder="억부 인성 · 조후 겸용"></span></div>
+        <div class="card on-seal"><span class="k">기신 · 구신</span>
+          <span class="v"><input class="f" data-k="v.gisin" placeholder="金 · 土"></span>
+          <span class="n"><input class="f" data-k="v.gisinN" placeholder="재성 과다 · 설기"></span></div>
+      </div>
+    </div>
+
+    <!-- 6. 총평 -->
+    <div class="sec grow">
+      <div class="sec-h"><h2>총평</h2><span class="hj">總評</span></div>
+      <div class="prose"><textarea class="f" rows="4" data-k="summary"
+        placeholder="명식 전체의 인상과 핵심 구조를 3~5줄로 요약합니다. 무엇이 이 사주를 규정하는 한 가지 특징인지, 그것이 삶에서 어떻게 드러나는지 적어 주세요."></textarea></div>
+    </div>
+
+  </div>
+  <div class="page-no">1 / 3 · 명식과 구조</div>
+  <div class="overflow-flag">내용이 지면을 넘칩니다</div>
+</section>
+
+<!-- ══════════════════ 2면 · 성향과 삶의 영역 ══════════════════ -->
+<section class="page" id="page2">
+  <div class="stack">
+
+    <header class="sheet-head" style="border-bottom-width:1px">
+      <h1 style="font-size:13pt">성향과 삶의 영역<span class="hanja">性向·十星</span></h1>
+      <div class="head-meta"><div><b>의뢰인</b><span id="echoName" style="font-size:8.6pt">—</span></div></div>
+    </header>
+
+    <!-- 7. 십성 -->
+    <div class="row-2u">
+      <div class="sec">
+        <div class="sec-h"><h2>십성 세력</h2><span class="hj">十星</span>
+          <span class="hint">0~8 입력</span></div>
+        <div class="bars" id="sipBars">
+          <div class="bar mono"><div class="name"><span class="glyph">比劫</span></div>
+            <div class="track"><div class="fill"></div></div>
+            <div class="val"><input class="f" data-k="sip.bigeop" inputmode="numeric" value="0"><span class="pct">0%</span></div></div>
+          <div class="bar mono"><div class="name"><span class="glyph">食傷</span></div>
+            <div class="track"><div class="fill"></div></div>
+            <div class="val"><input class="f" data-k="sip.siksang" inputmode="numeric" value="0"><span class="pct">0%</span></div></div>
+          <div class="bar mono"><div class="name"><span class="glyph">財星</span></div>
+            <div class="track"><div class="fill"></div></div>
+            <div class="val"><input class="f" data-k="sip.jaeseong" inputmode="numeric" value="0"><span class="pct">0%</span></div></div>
+          <div class="bar mono"><div class="name"><span class="glyph">官星</span></div>
+            <div class="track"><div class="fill"></div></div>
+            <div class="val"><input class="f" data-k="sip.gwanseong" inputmode="numeric" value="0"><span class="pct">0%</span></div></div>
+          <div class="bar mono"><div class="name"><span class="glyph">印星</span></div>
+            <div class="track"><div class="fill"></div></div>
+            <div class="val"><input class="f" data-k="sip.inseong" inputmode="numeric" value="0"><span class="pct">0%</span></div></div>
+        </div>
+        <div class="bars-foot"><span id="sipSum">합 0</span><span id="sipNote"></span></div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-h"><h2>기질 한 줄</h2><span class="hj">氣質</span></div>
+        <div class="chipfield">
+          <div class="chips" id="chips-kw"></div>
+          <input class="f chipinput" data-k="keywords" data-chips="chips-kw"
+                 placeholder="핵심 키워드 4~6개 (쉼표 구분)">
+        </div>
+        <div class="prose" style="margin-top:2px">
+          <textarea class="f" rows="6" data-k="temperament"
+            placeholder="일간의 기질, 월지에서 받은 성향, 십성 편중이 만드는 행동 패턴을 적습니다."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8~11. 영역별 -->
+    <div class="sec grow">
+      <div class="sec-h"><h2>영역별 해석</h2><span class="hj">六親·職業·財·健康</span></div>
+      <div class="stack" style="gap:8px; margin-top:2px">
+
+        <div class="block">
+          <div class="bh"><h3>성격과 내면</h3><span class="hj">性格</span>
+            <input class="f tagin" data-k="t.personality" placeholder="한 줄 요약"></div>
+          <div class="prose"><textarea class="f" rows="6" data-k="p.personality"
+            placeholder="장점과 그림자를 함께 씁니다. 스스로 인식하지 못하는 반복 패턴을 짚어 주면 좋습니다."></textarea></div>
+        </div>
+
+        <div class="block">
+          <div class="bh"><h3>대인관계와 인연</h3><span class="hj">六親</span>
+            <input class="f tagin" data-k="t.relation" placeholder="배우자궁 · 인연 시기"></div>
+          <div class="prose"><textarea class="f" rows="6" data-k="p.relation"
+            placeholder="일지 배우자궁, 관성/재성의 상태, 가족·동료와의 관계 방식을 적습니다."></textarea></div>
+        </div>
+
+        <div class="block">
+          <div class="bh"><h3>직업과 적성</h3><span class="hj">職業</span>
+            <input class="f tagin" data-k="t.career" placeholder="적합 직군"></div>
+          <div class="prose"><textarea class="f" rows="5" data-k="p.career"
+            placeholder="격국과 용신에 부합하는 직군, 조직 적응 방식, 피해야 할 환경을 적습니다."></textarea></div>
+        </div>
+
+        <div class="block">
+          <div class="bh"><h3>재물의 흐름</h3><span class="hj">財星</span>
+            <input class="f tagin" data-k="t.wealth" placeholder="정재형 / 편재형"></div>
+          <div class="prose"><textarea class="f" rows="5" data-k="p.wealth"
+            placeholder="재성의 위치와 강약, 축재 방식, 손재 주의 시기와 유형을 적습니다."></textarea></div>
+        </div>
+
+        <div class="block">
+          <div class="bh"><h3>건강</h3><span class="hj">健康</span>
+            <input class="f tagin" data-k="t.health" placeholder="주의 장부"></div>
+          <div class="prose"><textarea class="f" rows="3" data-k="p.health"
+            placeholder="오행 과다·고갈에 대응하는 장부와 생활 습관을 적습니다. 의학적 진단이 아님을 전제로 서술합니다."></textarea></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+  <div class="page-no">2 / 3 · 성향과 삶의 영역</div>
+  <div class="overflow-flag">내용이 지면을 넘칩니다</div>
+</section>
+
+<!-- ══════════════════ 3면 · 운의 흐름과 제언 ══════════════════ -->
+<section class="page" id="page3">
+  <div class="stack">
+
+    <header class="sheet-head" style="border-bottom-width:1px">
+      <h1 style="font-size:13pt">운의 흐름과 제언<span class="hanja">大運·歲運·開運</span></h1>
+      <div class="head-meta"><div><b>의뢰인</b><span id="echoName2" style="font-size:8.6pt">—</span></div></div>
+    </header>
+
+    <!-- 12. 대운 -->
+    <div class="sec">
+      <div class="sec-h"><h2>대운</h2><span class="hj">大運 · 10년</span>
+        <span class="hint">현재 대운 칸을 클릭하면 표시됩니다</span></div>
+      <table class="daeun">
+        <thead>
+          <tr>
+            <th style="width:13mm">나이</th>
+            <th style="width:16mm">간지</th>
+            <th style="width:19mm">십성</th>
+            <th style="width:17mm">길흉</th>
+            <th>흐름 요약</th>
+          </tr>
+        </thead>
+        <tbody id="daeunBody"></tbody>
+      </table>
+    </div>
+
+    <!-- 13. 세운 -->
+    <div class="sec">
+      <div class="sec-h"><h2>세운</h2><span class="hj">歲運 · 연운</span></div>
+      <div class="row-2">
+        <div class="block">
+          <div class="bh"><h3 id="yrThis">당해년</h3>
+            <input class="f tagin" data-k="se.thisGz" placeholder="丙午 · 비견"></div>
+          <div class="prose"><textarea class="f" rows="4" data-k="se.thisTxt"
+            placeholder="올 한 해의 주제, 유리한 달과 조심할 달을 적습니다."></textarea></div>
+        </div>
+        <div class="block">
+          <div class="bh"><h3 id="yrNext">익년</h3>
+            <input class="f tagin" data-k="se.nextGz" placeholder="丁未 · 겁재"></div>
+          <div class="prose"><textarea class="f" rows="4" data-k="se.nextTxt"
+            placeholder="다음 해 흐름과 미리 준비할 일을 적습니다."></textarea></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 14. 개운법 -->
+    <div class="sec">
+      <div class="sec-h"><h2>개운</h2><span class="hj">開運</span>
+        <span class="hint">용신을 북돋우는 생활 처방</span></div>
+      <div class="remedy">
+        <div class="rcell"><span class="k">보완 오행</span><input class="f" data-k="r.wx" placeholder="木 · 水"></div>
+        <div class="rcell"><span class="k">색</span><input class="f" data-k="r.color" placeholder="청록 · 남색"></div>
+        <div class="rcell"><span class="k">방위</span><input class="f" data-k="r.dir" placeholder="동 · 북"></div>
+        <div class="rcell"><span class="k">숫자</span><input class="f" data-k="r.num" placeholder="3 · 8"></div>
+        <div class="rcell"><span class="k">계절 · 시간</span><input class="f" data-k="r.time" placeholder="봄 · 새벽"></div>
+      </div>
+      <div class="prose" style="margin-top:3px">
+        <textarea class="f" rows="2" data-k="r.txt"
+          placeholder="일상에서 실천할 수 있는 구체적 행동으로 바꾸어 적습니다. (환경·습관·관계·공부 방향 등)"></textarea>
+      </div>
+    </div>
+
+    <!-- 15. 종합 제언 -->
+    <div class="sec">
+      <div class="sec-h"><h2>종합 제언</h2><span class="hj">提言</span></div>
+      <div class="prose"><textarea class="f" rows="10" data-k="advice"
+        placeholder="의뢰인이 가져갈 결론을 씁니다. 사주가 정한 것과 선택으로 바꿀 수 있는 것을 구분해 주면 상담의 만족도가 올라갑니다."></textarea></div>
+    </div>
+
+    <!-- 낙관 -->
+    <div class="signoff">
+      <div class="disc">
+        본 감정서는 사주 명리 이론에 근거한 상담 자료로, 의학·법률·투자 판단을 대신하지 않습니다.
+        해석은 관법과 감정인에 따라 달라질 수 있으며, 기재된 시기와 경향은 확정된 사실이 아니라
+        참고를 위한 것입니다. 최종 선택과 책임은 의뢰인에게 있습니다.
+        <div style="margin-top:3px">문의 · <input class="f" data-k="contact" style="width:52mm" placeholder="연락처 / 상담소명"></div>
+      </div>
+      <div class="seal-wrap">
+        <div class="seal-line"><span id="echoDate">—</span></div>
+        <div class="seal-line">감정인 <span id="echoBy">—</span></div>
+        <div class="seal" role="img" aria-label="감정인 낙관"><span>鑑</span><span>定</span></div>
+      </div>
+    </div>
+
+  </div>
+  <div class="page-no">3 / 3 · 운의 흐름과 제언</div>
+  <div class="overflow-flag">내용이 지면을 넘칩니다</div>
+</section>
+
+</main>
+
+<script>
+(function(){
+"use strict";
+
+var STORE = "saju-gamjeongseo-v1";
+var DAEUN_ROWS = 8;
+
+/* ── 오행 판별표 (천간·지지, 한자/한글 모두) ───────────────── */
+var WX = {};
+[["甲갑乙을寅인卯묘","mok"],
+ ["丙병丁정巳사午오","hwa"],
+ ["戊무己기辰진戌술丑축未미","to"],
+ ["庚경辛신申유酉","geum"],
+ ["壬임癸계亥해子자","su"]].forEach(function(pair){
+  pair[0].split("").forEach(function(ch){ WX[ch] = pair[1]; });
+});
+var WX_LABEL = {mok:"목",hwa:"화",to:"토",geum:"금",su:"수"};
+var WX_KEYS  = ["mok","hwa","to","geum","su"];
+
+function wuxingOf(str){
+  if(!str) return null;
+  for(var i=0;i<str.length;i++){ if(WX[str[i]]) return WX[str[i]]; }
+  return null;
+}
+
+/* ── 대운표 생성 ──────────────────────────────────────────── */
+var LUCKS = ["","대길","길","평","흉","대흉"];
+(function buildDaeun(){
+  var tb = document.getElementById("daeunBody");
+  var html = "";
+  for(var i=0;i<DAEUN_ROWS;i++){
+    var opts = LUCKS.map(function(l){
+      return '<option value="'+l+'">'+(l||"—")+'</option>';
+    }).join("");
+    html +=
+      '<tr>'+
+        '<td class="age"><input class="f" data-k="du.'+i+'.age" placeholder="'+(7+i*10)+'~'+(16+i*10)+'"></td>'+
+        '<td class="gz-cell"><input class="f" data-k="du.'+i+'.gz" maxlength="4" placeholder="―"></td>'+
+        '<td><input class="f" data-k="du.'+i+'.sip" placeholder="―"></td>'+
+        '<td class="luck"><select class="luckpick" data-k="du.'+i+'.luck" data-luck="">'+opts+'</select></td>'+
+        '<td class="kw"><input class="f" data-k="du.'+i+'.kw" placeholder="한 줄 요약"></td>'+
+      '</tr>';
+  }
+  tb.innerHTML = html;
+})();
+
+/* ── 필드 수집 ────────────────────────────────────────────── */
+var fields = Array.prototype.slice.call(document.querySelectorAll("[data-k]"));
+
+function readAll(){
+  var o = {};
+  fields.forEach(function(el){ o[el.dataset.k] = el.value; });
+  o["__theme"] = document.documentElement.getAttribute("data-theme") || "";
+  o["__wxManual"] = wxIsManual() ? "1" : "0";
+  return o;
+}
+function wxIsManual(){
+  return !!document.querySelector('[data-k^="wx."][data-manual="1"]');
+}
+function setWxManual(on){
+  document.querySelectorAll('[data-k^="wx."]').forEach(function(el){
+    if(on) el.dataset.manual = "1"; else delete el.dataset.manual;
+  });
+}
+function writeAll(o){
+  fields.forEach(function(el){
+    if(Object.prototype.hasOwnProperty.call(o, el.dataset.k)) el.value = o[el.dataset.k];
+  });
+  // 직접 입력 여부까지 복원해야, 저장본을 다시 연 뒤에도 명식 수정이 오행에 반영된다
+  setWxManual(o["__wxManual"] === "1");
+  refreshAll();
+}
+
+/* ── 저장 ─────────────────────────────────────────────────── */
+var note = document.getElementById("saveNote");
+var saveTimer = null;
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function(){
+    try{
+      localStorage.setItem(STORE, JSON.stringify(readAll()));
+      var t = new Date();
+      note.textContent = "저장됨 " +
+        String(t.getHours()).padStart(2,"0")+":"+String(t.getMinutes()).padStart(2,"0");
+    }catch(e){ note.textContent = "저장 실패"; }
+  }, 350);
+}
+/* 창을 닫거나 탭을 벗어날 때 대기 중인 저장을 즉시 반영한다 —
+   마지막에 친 문장이 사라지는 일이 없도록. */
+function flushSave(){
+  clearTimeout(saveTimer);
+  try{ localStorage.setItem(STORE, JSON.stringify(readAll())); }catch(e){}
+}
+window.addEventListener("beforeunload", flushSave);
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState === "hidden") flushSave();
+});
+
+/* ── 렌더링 ───────────────────────────────────────────────── */
+/* rows 속성을 최소 높이로 고정한다. 내용이 짧아도 지면이 무너지지 않고,
+   이 최소 높이가 곧 '이 칸에 쓸 수 있는 분량'의 기준선이 된다. */
+function setFloors(){
+  document.querySelectorAll("textarea.f").forEach(function(t){
+    var rows = parseInt(t.getAttribute("rows"), 10) || 3;
+    var cs = getComputedStyle(t);
+    var lh = parseFloat(cs.lineHeight);
+    if(!isFinite(lh)) lh = parseFloat(cs.fontSize) * 1.55;
+    var pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+    t.style.minHeight = Math.round(rows * lh + pad) + "px";
+  });
+}
+
+function autoGrow(el){
+  if(el.tagName !== "TEXTAREA") return;
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + "px";
+}
+
+function renderChips(){
+  document.querySelectorAll("[data-chips]").forEach(function(input){
+    var box = document.getElementById(input.dataset.chips);
+    if(!box) return;
+    var items = input.value.split(",").map(function(s){ return s.trim(); })
+                  .filter(function(s){ return s.length; });
+    box.innerHTML = items.map(function(s){
+      var seal = /충|형|파|해|살|絶|공망/.test(s) ? " on-seal" : "";
+      return '<span class="chip'+seal+'">'+
+        s.replace(/[&<>"]/g, function(c){
+          return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];
+        })+'</span>';
+    }).join("");
+  });
+}
+
+function renderMingsik(){
+  var counts = {mok:0,hwa:0,to:0,geum:0,su:0};
+  var filled = 0;
+  document.querySelectorAll("[data-wx]").forEach(function(input){
+    var cell = input.closest(".gz");
+    var wx = wuxingOf(input.value);
+    WX_KEYS.forEach(function(k){ cell.classList.remove("wx-"+k); });
+    var tag = cell.querySelector(".wxtag");
+    if(wx){
+      cell.classList.add("wx-"+wx);
+      tag.textContent = WX_LABEL[wx];
+      counts[wx]++; filled++;
+    }else{
+      tag.textContent = "";
+    }
+  });
+  return {counts:counts, filled:filled};
+}
+
+function renderBars(rootId, keys, prefix, sumEl, noteEl, markZero){
+  var total = 0, vals = {};
+  keys.forEach(function(k){
+    var el = document.querySelector('[data-k="'+prefix+k+'"]');
+    var n = parseFloat(el.value);
+    if(!isFinite(n) || n < 0) n = 0;
+    vals[k] = n; total += n;
+  });
+  var max = Math.max.apply(null, keys.map(function(k){ return vals[k]; }).concat([1]));
+  var bars = document.querySelectorAll("#"+rootId+" .bar");
+  keys.forEach(function(k, i){
+    var bar = bars[i]; if(!bar) return;
+    var n = vals[k];
+    bar.querySelector(".fill").style.width = (n / max * 100) + "%";
+    bar.querySelector(".pct").textContent = total ? Math.round(n/total*100) + "%" : "0%";
+    if(markZero) bar.classList.toggle("is-zero", n === 0);
+  });
+  if(sumEl) sumEl.textContent = "합 " + (Math.round(total*10)/10) + (markZero ? "자" : "");
+  return {total:total, vals:vals};
+}
+
+function renderWuxing(){
+  var ms = renderMingsik();
+  var modeEl = document.getElementById("wxMode");
+  var auto = !wxIsManual();
+  if(auto && ms.filled > 0){
+    WX_KEYS.forEach(function(k){
+      document.querySelector('[data-k="wx.'+k+'"]').value = ms.counts[k];
+    });
+    modeEl.textContent = "명식에서 자동 집계";
+  }else if(!auto){
+    modeEl.textContent = "직접 입력 (지장간 반영)";
+  }
+  var r = renderBars("wxBars", WX_KEYS, "wx.",
+    document.getElementById("wxSum"), null, true);
+  // 빈 서식에서는 다섯 칸이 모두 '없음'으로 표시되지 않도록, 자료가 있을 때만 판정한다
+  var hasData = r.total > 0;
+  var missing = hasData
+    ? WX_KEYS.filter(function(k){ return r.vals[k] === 0; }).map(function(k){ return WX_LABEL[k]; })
+    : [];
+  document.querySelectorAll("#wxBars .bar").forEach(function(bar){
+    if(!hasData) bar.classList.remove("is-zero");
+  });
+  var mEl = document.getElementById("wxMissing");
+  mEl.textContent = !hasData ? "" : (missing.length ? "무(無)오행 · " + missing.join("·") : "오행 구전");
+  mEl.className = missing.length ? "warn" : "";
+}
+
+function renderSipseong(){
+  renderBars("sipBars",
+    ["bigeop","siksang","jaeseong","gwanseong","inseong"], "sip.",
+    document.getElementById("sipSum"), null, false);
+}
+
+function renderScale(){
+  var v = parseFloat(document.getElementById("strRange").value);
+  if(!isFinite(v)) v = 50;
+  document.getElementById("scaleMark").style.left = v + "%";
+}
+
+function renderLuck(){
+  document.querySelectorAll(".luckpick").forEach(function(sel){
+    sel.dataset.luck = sel.value;
+  });
+}
+
+function renderEchoes(){
+  var name = (document.querySelector('[data-k="c.name"]').value || "").trim();
+  var by   = (document.querySelector('[data-k="meta.by"]').value || "").trim();
+  var date = (document.querySelector('[data-k="meta.date"]').value || "").trim();
+  document.getElementById("echoName").textContent  = name || "—";
+  document.getElementById("echoName2").textContent = name || "—";
+  document.getElementById("echoBy").textContent    = by || "—";
+  document.getElementById("echoDate").textContent  = date || "—";
+
+  var y = parseInt((date.match(/\d{4}/) || [])[0], 10);
+  if(isFinite(y)){
+    document.getElementById("yrThis").textContent = y + "년";
+    document.getElementById("yrNext").textContent = (y+1) + "년";
+  }
+}
+
+function checkOverflow(){
+  if(window.matchMedia("(max-width:900px)").matches) return;
+  document.querySelectorAll(".page").forEach(function(pg){
+    var inner = pg.querySelector(".stack");
+    if(!inner) return;
+    var avail = pg.clientHeight
+      - parseFloat(getComputedStyle(pg).paddingTop)
+      - parseFloat(getComputedStyle(pg).paddingBottom);
+    pg.classList.toggle("is-over", inner.scrollHeight > avail + 2);
+  });
+}
+
+function refreshAll(){
+  fields.forEach(autoGrow);
+  renderChips();
+  renderWuxing();
+  renderSipseong();
+  renderScale();
+  renderLuck();
+  renderEchoes();
+  checkOverflow();
+}
+
+/* ── 이벤트 ───────────────────────────────────────────────── */
+document.addEventListener("input", function(e){
+  var el = e.target.closest("[data-k]");
+  if(!el) return;
+  if(/^wx\./.test(el.dataset.k)) el.dataset.manual = "1";
+  autoGrow(el);
+  refreshAll();
+  save();
+});
+document.addEventListener("change", function(e){
+  if(e.target.closest("[data-k]")){ refreshAll(); save(); }
+});
+
+// 대운 현재 구간 표시
+document.getElementById("daeunBody").addEventListener("click", function(e){
+  var td = e.target.closest("td.age");
+  if(!td) return;
+  var row = td.parentNode;
+  var on = row.classList.contains("cur-row");
+  Array.prototype.forEach.call(this.rows, function(r){
+    r.classList.remove("cur-row");
+    Array.prototype.forEach.call(r.cells, function(c){ c.classList.remove("cur"); });
+  });
+  if(!on){
+    row.classList.add("cur-row");
+    Array.prototype.forEach.call(row.cells, function(c){ c.classList.add("cur"); });
+  }
+  save();
+});
+
+/* ── 모드 전환 ────────────────────────────────────────────── */
+var mEdit = document.getElementById("mEdit"), mView = document.getElementById("mView");
+function setMode(view){
+  document.body.classList.toggle("mode-view", view);
+  document.body.classList.toggle("mode-edit", !view);
+  mEdit.setAttribute("aria-pressed", String(!view));
+  mView.setAttribute("aria-pressed", String(view));
+  document.querySelectorAll(".chipinput").forEach(function(el){
+    el.style.display = view ? "none" : "";
+  });
+  document.getElementById("strRange").style.display = view ? "none" : "";
+  setTimeout(checkOverflow, 0);
+}
+mEdit.addEventListener("click", function(){ setMode(false); });
+mView.addEventListener("click", function(){ setMode(true); });
+
+/* ── 툴바 동작 ────────────────────────────────────────────── */
+document.getElementById("bPrint").addEventListener("click", function(){
+  setMode(true); setTimeout(function(){ window.print(); }, 60);
+});
+
+document.getElementById("bExport").addEventListener("click", function(){
+  var data = readAll();
+  var name = (data["c.name"] || "무명").trim().replace(/[\\/:*?"<>|]/g,"");
+  var date = (data["meta.date"] || new Date().toISOString().slice(0,10)).trim();
+  var blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "사주감정서_" + name + "_" + date + ".json";
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+});
+
+var fileIn = document.getElementById("fileIn");
+document.getElementById("bImport").addEventListener("click", function(){ fileIn.click(); });
+fileIn.addEventListener("change", function(){
+  var f = fileIn.files && fileIn.files[0];
+  if(!f) return;
+  var rd = new FileReader();
+  rd.onload = function(){
+    try{
+      var o = JSON.parse(rd.result);
+      writeAll(o);
+      save();
+      note.textContent = "불러옴";
+    }catch(err){
+      note.textContent = "파일을 읽을 수 없습니다";
+    }
+  };
+  rd.readAsText(f);
+  fileIn.value = "";
+});
+
+document.getElementById("bClear").addEventListener("click", function(){
+  if(!confirm("작성한 내용을 모두 지웁니다. 계속할까요?")) return;
+  fields.forEach(function(el){
+    el.value = el.tagName === "SELECT" ? "" : "";
+    delete el.dataset.manual;
+  });
+  setWxManual(false);
+  document.querySelectorAll('[data-k^="wx."],[data-k^="sip."]').forEach(function(el){ el.value = "0"; });
+  document.getElementById("strRange").value = 50;
+  document.querySelectorAll("#daeunBody td").forEach(function(c){ c.classList.remove("cur"); });
+  refreshAll(); save();
+});
+
+/* ── 예시 데이터 (레이아웃 확인용 가상 자료) ───────────────── */
+var SAMPLE = {
+  "meta.date":"2026-07-30","meta.by":"김서연","meta.school":"자평 · 억부 겸 조후",
+  "c.name":"홍지우","c.sex":"여 · 곤명","c.solar":"1990-08-12","c.time":"10:40",
+  "c.lunar":"1990-06-22 (평)","c.place":"서울","c.tst":"-32분 적용","c.daeundir":"순행 · 7세 대운",
+  "ms.sipGan.si":"정관","ms.sipGan.il":"日元","ms.sipGan.wol":"편인","ms.sipGan.nyeon":"편재",
+  "ms.gan.si":"癸","ms.gan.il":"丙","ms.gan.wol":"甲","ms.gan.nyeon":"庚",
+  "ms.ji.si":"巳","ms.ji.il":"戌","ms.ji.wol":"申","ms.ji.nyeon":"午",
+  "ms.sipJi.si":"비견","ms.sipJi.il":"식신","ms.sipJi.wol":"편재","ms.sipJi.nyeon":"겁재",
+  "ms.jjg.si":"戊庚丙","ms.jjg.il":"辛丁戊","ms.jjg.wol":"戊壬庚","ms.jjg.nyeon":"丙己丁",
+  "ms.us.si":"건록","ms.us.il":"묘","ms.us.wol":"병","ms.us.nyeon":"제왕",
+  "hapchung":"巳申 형합, 午戌 반합화, 巳午 방합화",
+  "sinsal":"역마, 문창귀인, 백호, 홍염",
+  "deuk.ryeong":"실령 (申월 丙화)","deuk.ji":"득지 (戌 중 丁화)",
+  "deuk.se":"득세 (巳午 화기)","deuk.johu":"조열 · 수기 부족",
+  "strength":"62",
+  "v.ilgan":"丙火","v.ilganN":"양(陽) · 한낮의 태양",
+  "v.gyeokguk":"편재격","v.gyeokgukN":"월지 申 정기 庚금 투출",
+  "v.yongsin":"水 · 金","v.yongsinN":"조후 癸수 · 재성 유통",
+  "v.gisin":"火 · 木","v.gisinN":"화기 과다 · 목생화 가중",
+  "summary":"불의 기운이 넉넉한 명식입니다. 여름 끝자락의 丙화 일간이 巳午戌 화기를 얻어 스스로 빛을 내는 힘은 충분하나, 물이 시간 기둥의 癸수 하나뿐이라 열이 식을 자리가 마땅치 않습니다. 재능과 추진력이 앞서 나가는 대신 쉬는 법을 배우지 못한 구조이며, 삶의 과제는 '더 타오르는 것'이 아니라 '식힐 자리를 스스로 만드는 것'에 있습니다. 월지 申금 편재가 뚜렷해 현실 감각과 돈의 흐름을 읽는 눈은 타고났습니다.",
+  "sip.bigeop":"3","sip.siksang":"1","sip.jaeseong":"2","sip.gwanseong":"1","sip.inseong":"1",
+  "keywords":"직진, 승부욕, 현실감각, 조급함, 의리, 번아웃",
+  "temperament":"판단이 빠르고 결론을 먼저 말하는 사람입니다. 비겁이 두터워 남에게 기대지 않고 스스로 해결하려 하며, 그 힘이 신뢰를 얻는 근거인 동시에 혼자 소진되는 원인이 됩니다. 편재의 감각으로 기회를 알아보는 속도는 빠르지만, 식상이 얇아 그 기회를 남에게 설명하고 설득하는 단계에서 손실이 생깁니다.",
+  "t.personality":"뜨겁고 정직한 추진형",
+  "p.personality":"감정을 숨기지 못하는 대신 뒤끝이 없습니다. 옳다고 판단하면 손해를 감수하고도 밀고 나가는 기질이 있어 주변의 신망이 두텁습니다. 다만 화기가 강한 명식은 스스로에게 가장 가혹해지기 쉬우니, 성과가 아닌 상태로 자신을 평가하는 연습이 필요합니다.",
+  "t.relation":"일지 戌 식신 · 34~38세 인연기",
+  "p.relation":"일지에 식신이 앉아 배우자와의 관계에서 돌보고 베푸는 쪽에 서게 됩니다. 관성이 얇아 먼저 다가오는 인연보다 함께 일하며 쌓이는 인연이 자연스럽습니다. 巳申 형합이 있어 가까운 사이일수록 말로 다치게 하는 국면이 반복되니, 중요한 대화는 감정이 식은 뒤로 미루는 습관이 도움이 됩니다.",
+  "t.career":"금융 · 유통 · 데이터 · 자영",
+  "p.career":"편재격에 실물 감각이 더해져 숫자와 흐름을 다루는 일이 잘 맞습니다. 큰 조직의 위계 안에서는 답답함을 느끼기 쉬우니, 성과가 자기 이름으로 남는 구조를 고르는 편이 낫습니다. 완전한 단독 창업보다 실무 파트너를 두는 형태가 안정적입니다.",
+  "t.wealth":"편재형 · 큰 흐름 포착",
+  "p.wealth":"모아서 불리기보다 흐름을 타고 크게 움직이는 재물입니다. 들어오는 속도만큼 나가는 속도도 빨라, 수익의 일정 비율을 손대지 않는 계좌로 강제 분리하는 방식이 가장 잘 맞습니다. 화기가 왕한 해에는 확장 판단이 낙관으로 기울기 쉬우니 이때의 대형 투자는 한 박자 늦추십시오.",
+  "t.health":"심장 · 순환기 · 수면",
+  "p.health":"화 과다 · 수 부족 구조라 열과 압력이 위로 몰립니다. 수면 부족이 가장 먼저 신호로 나타나며, 수분 섭취와 규칙적인 취침 시각만으로도 체감 차이가 큽니다. 의학적 진단이 아닌 경향성 참고입니다.",
+  "du.0.age":"7~16","du.0.gz":"癸未","du.0.sip":"정관","du.0.luck":"평","du.0.kw":"조용한 성장기, 학업 기반",
+  "du.1.age":"17~26","du.1.gz":"壬午","du.1.sip":"편관","du.1.luck":"흉","du.1.kw":"진로 혼선, 시행착오 누적",
+  "du.2.age":"27~36","du.2.gz":"辛巳","du.2.sip":"정재","du.2.luck":"길","du.2.kw":"실무 역량 완성, 재물 기반 형성",
+  "du.3.age":"37~46","du.3.gz":"庚辰","du.3.sip":"편재","du.3.luck":"대길","du.3.kw":"수기 보강, 확장과 결실의 10년",
+  "du.4.age":"47~56","du.4.gz":"己卯","du.4.sip":"상관","du.4.luck":"평","du.4.kw":"방향 전환, 후배 양성",
+  "du.5.age":"57~66","du.5.gz":"戊寅","du.5.sip":"식신","du.5.luck":"흉","du.5.kw":"목생화 가중, 건강 관리기",
+  "du.6.age":"67~76","du.6.gz":"丁丑","du.6.sip":"겁재","du.6.luck":"평","du.6.kw":"축토 습기, 안정 회복",
+  "du.7.age":"77~86","du.7.gz":"丙子","du.7.sip":"비견","du.7.luck":"길","du.7.kw":"자수 조후, 만년 평온",
+  "se.thisGz":"丙午 · 비견","se.thisTxt":"화기가 겹쳐 의욕이 앞서는 해입니다. 새 일을 벌이기보다 벌여 놓은 것을 정리해 수익 구조로 바꾸는 데 힘을 쓰십시오. 5~7월 판단은 한 템포 늦추고, 10월 이후 계약이 유리합니다.",
+  "se.nextGz":"丁未 · 겁재","se.nextTxt":"동업·금전 대여 요청이 들어오기 쉬운 해입니다. 사람 문제로 재물이 새는 형태를 경계하고, 문서는 반드시 조건을 문면에 남기십시오.",
+  "r.wx":"水 · 金","r.color":"남색 · 검정 · 흰색","r.dir":"북 · 서","r.num":"1 · 6 · 4","r.time":"겨울 · 밤",
+  "r.txt":"물가 산책과 충분한 수면이 이 명식에 가장 직접적인 처방입니다. 침실을 북쪽에 두고, 결정을 앞둔 날에는 아침이 아니라 밤에 판단하십시오.",
+  "advice":"타고난 것은 열량입니다. 이 사주는 힘이 모자라 문제가 되는 명식이 아니라, 힘을 쓰는 속도를 스스로 조절해야 하는 명식입니다. 바꿀 수 없는 것은 뜨겁게 몰입하는 기질이고, 선택할 수 있는 것은 그 몰입을 어디에 얼마나 오래 쏟을지입니다.\n37세부터의 庚辰 대운은 이 명식이 기다려 온 구간입니다. 그 전까지의 10년은 성과를 내는 시기가 아니라 성과를 담을 그릇을 만드는 시기로 삼으십시오. 지금 조급하게 앞당긴 결정 하나가, 정작 운이 열렸을 때 쓸 체력을 미리 써 버리는 일이 됩니다.",
+  "contact":"—"
+};
+
+document.getElementById("bSample").addEventListener("click", function(){
+  if(!confirm("예시 데이터로 덮어씁니다. (레이아웃 확인용 가상 자료입니다)")) return;
+  writeAll(SAMPLE);
+  save();
+});
+
+/* ── 단축키 ───────────────────────────────────────────────── */
+document.addEventListener("keydown", function(e){
+  if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s"){
+    e.preventDefault();
+    document.getElementById("bExport").click();
+  }
+});
+
+/* ── 초기화 ───────────────────────────────────────────────── */
+(function init(){
+  setFloors();
+  var raw = null;
+  try{ raw = localStorage.getItem(STORE); }catch(e){}
+  if(raw){
+    try{
+      var o = JSON.parse(raw);
+      if(o.__theme) document.documentElement.setAttribute("data-theme", o.__theme);
+      writeAll(o);
+      note.textContent = "이전 작성분 불러옴";
+    }catch(e){ note.textContent = "새 문서"; refreshAll(); }
+  }else{
+    note.textContent = "새 문서";
+    refreshAll();
+  }
+  window.addEventListener("resize", checkOverflow);
+  window.addEventListener("beforeprint", function(){ setMode(true); });
+})();
+
+})();
+</script>
+</body>
+</html>
