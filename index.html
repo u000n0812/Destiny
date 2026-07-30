@@ -275,9 +275,7 @@ select.f{-webkit-appearance:none; appearance:none; cursor:pointer; padding-right
 }
 .wxbar .score b{font-size:8.6pt; font-weight:600; color:var(--ink)}
 .wxbar .score .pct{font-size:7pt; color:var(--ink-3); min-width:22px; text-align:right}
-.wx-formula{font-size:6.6pt; line-height:1.45; color:var(--ink-3); margin-top:2px}
 .bars-foot{display:flex; justify-content:space-between; font-size:7pt; color:var(--ink-3); margin-top:1px}
-.bars-foot .warn{color:var(--seal)}
 
 /* 십성 세력 — 단일 색상(크기 비교) */
 .bar.mono .fill{background:var(--accent)}
@@ -555,11 +553,7 @@ input[type="range"].f:focus-visible::-moz-range-thumb{outline:2px solid var(--ac
             <div class="cnt"><input class="f" data-k="wx.su" inputmode="numeric" value="0" aria-label="수 개수"></div>
             <div class="score"><b>0</b><span class="pct">0%</span></div></div>
         </div>
-        <div class="bars-foot">
-          <span id="wxSum">합 0자 · 0점</span>
-          <span id="wxMissing"></span>
-        </div>
-        <div class="wx-formula">점수 = 천간 각 10 · 지지 시 15 · 일 15 · 월 30 · 년 10 (만점 110)</div>
+        <div class="bars-foot"><span id="wxSum">합 0자 · 0점</span></div>
       </div>
 
       <div class="sec">
@@ -640,7 +634,7 @@ input[type="range"].f:focus-visible::-moz-range-thumb{outline:2px solid var(--ac
             <div class="track"><div class="fill"></div></div>
             <div class="val"><input class="f" data-k="sip.inseong" inputmode="numeric" value="0"><span class="pct">0%</span></div></div>
         </div>
-        <div class="bars-foot"><span id="sipSum">합 0</span><span id="sipNote"></span></div>
+        <div class="bars-foot"><span id="sipSum">합 0</span></div>
       </div>
 
       <div class="sec">
@@ -1018,12 +1012,6 @@ function renderWuxing(){
     "합 " + (Math.round(totalCount*10)/10) + "자 · " + totalScore + "점"
     + (byScore && totalScore !== WEIGHT_TOTAL ? " / " + WEIGHT_TOTAL : "");
 
-  var missing = hasData
-    ? WX_KEYS.filter(function(k){ return counts[k] === 0; }).map(function(k){ return WX_LABEL[k]; })
-    : [];
-  var mEl = document.getElementById("wxMissing");
-  mEl.textContent = !hasData ? "" : (missing.length ? "무(無)오행 · " + missing.join("·") : "오행 구전");
-  mEl.className = missing.length ? "warn" : "";
 }
 
 function renderSipseong(){
