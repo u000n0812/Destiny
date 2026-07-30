@@ -155,7 +155,6 @@ body{
   margin:0; font-family:var(--f-serif); font-size:10.8pt; font-weight:600; letter-spacing:.06em;
 }
 .sec-h .hj{font-size:7.6pt; letter-spacing:.2em; color:var(--ink-3)}
-.sec-h .hint{margin-left:auto; font-size:7pt; color:var(--ink-3); letter-spacing:.02em}
 .stack{display:flex; flex-direction:column; gap:8px; flex:1; min-height:0}
 .row-2{display:grid; grid-template-columns:1fr 1fr; gap:9px}
 .row-2u{display:grid; grid-template-columns:1.15fr .85fr; gap:10px}
@@ -461,8 +460,7 @@ input[type="range"].f:focus-visible::-moz-range-thumb{outline:2px solid var(--ac
 
     <!-- 2. 명식 -->
     <div class="sec">
-      <div class="sec-h"><h2>사주 명식</h2><span class="hj">四柱命式</span>
-        <span class="hint">천간·지지를 입력하면 오행이 자동 판별됩니다</span></div>
+      <div class="sec-h"><h2>사주 명식</h2><span class="hj">四柱命式</span></div>
       <div class="mingsik">
         <div class="ms-grid">
           <div class="ms-rowlbl" style="background:var(--panel)"></div>
@@ -533,8 +531,7 @@ input[type="range"].f:focus-visible::-moz-range-thumb{outline:2px solid var(--ac
     <!-- 4. 오행 · 강약 -->
     <div class="row-2u">
       <div class="sec">
-        <div class="sec-h"><h2>오행 분포</h2><span class="hj">五行分布</span>
-          <span class="hint" id="wxMode">명식에서 자동 집계</span></div>
+        <div class="sec-h"><h2>오행 분포</h2><span class="hj">五行分布</span></div>
         <div class="bars-head"><span></span><span></span><span>개수</span><span>점수</span></div>
         <div class="bars" id="wxBars">
           <div class="bar wxbar wx-mok"><div class="name"><span class="glyph">木</span><span class="kor">목</span></div>
@@ -625,8 +622,7 @@ input[type="range"].f:focus-visible::-moz-range-thumb{outline:2px solid var(--ac
     <!-- 7. 십성 -->
     <div class="row-2u">
       <div class="sec">
-        <div class="sec-h"><h2>십성 세력</h2><span class="hj">十星</span>
-          <span class="hint">0~8 입력</span></div>
+        <div class="sec-h"><h2>십성 세력</h2><span class="hj">十星</span></div>
         <div class="bars" id="sipBars">
           <div class="bar mono"><div class="name"><span class="glyph">比劫</span></div>
             <div class="track"><div class="fill"></div></div>
@@ -720,8 +716,7 @@ input[type="range"].f:focus-visible::-moz-range-thumb{outline:2px solid var(--ac
 
     <!-- 12. 대운 -->
     <div class="sec">
-      <div class="sec-h"><h2>대운</h2><span class="hj">大運 · 10년</span>
-        <span class="hint">현재 대운 칸을 클릭하면 표시됩니다</span></div>
+      <div class="sec-h"><h2>대운</h2><span class="hj">大運 · 10년</span></div>
       <table class="daeun">
         <thead>
           <tr>
@@ -757,8 +752,7 @@ input[type="range"].f:focus-visible::-moz-range-thumb{outline:2px solid var(--ac
 
     <!-- 14. 개운법 -->
     <div class="sec">
-      <div class="sec-h"><h2>개운</h2><span class="hj">開運</span>
-        <span class="hint">용신을 북돋우는 생활 처방</span></div>
+      <div class="sec-h"><h2>개운</h2><span class="hj">開運</span></div>
       <div class="remedy">
         <div class="rcell"><span class="k">보완 오행</span><input class="f" data-k="r.wx" placeholder="木 · 水"></div>
         <div class="rcell"><span class="k">색</span><input class="f" data-k="r.color" placeholder="청록 · 남색"></div>
@@ -988,15 +982,10 @@ function renderBars(rootId, keys, prefix, sumEl, noteEl, markZero){
 
 function renderWuxing(){
   var ms = renderMingsik();
-  var modeEl = document.getElementById("wxMode");
-  var auto = !wxIsManual();
-  if(auto && ms.filled > 0){
+  if(!wxIsManual() && ms.filled > 0){
     WX_KEYS.forEach(function(k){
       document.querySelector('[data-k="wx.'+k+'"]').value = ms.counts[k];
     });
-    modeEl.textContent = "명식에서 자동 집계";
-  }else if(!auto){
-    modeEl.textContent = "직접 입력 (지장간 반영)";
   }
   // 개수는 입력칸에서, 점수는 명식 자리에서 온다
   var counts = {}, totalCount = 0, totalScore = 0;
