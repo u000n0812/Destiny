@@ -481,7 +481,57 @@ input[type="range"].f:focus-visible::-moz-range-thumb{outline:2px solid var(--ac
 body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
 @media (prefers-color-scheme:dark){ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(143,179,222,.35)} }
 .legend{font-size:7pt; color:var(--ink-3); margin-top:6px}
-@media print{ .panel, .drop{display:none!important} }
+@media print{ .panel, .drop, .lockscreen, .lockmenu{display:none!important} }
+
+/* ══════ 잠금 ══════ */
+.lockscreen{
+  position:fixed; inset:0; z-index:200; display:grid; place-items:center;
+  background:var(--desk);
+}
+.lockscreen[hidden]{display:none}
+.lockbox{
+  width:min(420px, 90vw); background:var(--paper); border:1px solid var(--rule-strong);
+  border-radius:3px; padding:26px 26px 20px; box-shadow:0 10px 40px rgba(0,0,0,.18);
+  display:flex; flex-direction:column; gap:10px;
+}
+.lockbox h2{
+  margin:0; font-family:var(--f-serif); font-size:15pt; font-weight:600; letter-spacing:.06em;
+}
+.lockbox h2 small{
+  display:block; font-family:var(--f-sans); font-size:7.4pt;
+  letter-spacing:.2em; color:var(--ink-3); margin-top:4px;
+}
+.lockbox p{margin:0; font-size:8.6pt; line-height:1.65; color:var(--ink-2)}
+.lockbox input{
+  font:inherit; font-size:11pt; padding:9px 11px; letter-spacing:.08em;
+  border:1px solid var(--rule-strong); border-radius:2px;
+  background:var(--panel); color:var(--ink);
+}
+.lockbox input:focus{outline:2px solid var(--accent); outline-offset:-1px}
+.lockbox .err{font-size:8.2pt; color:var(--seal); min-height:1.2em}
+.lockbox .row{display:flex; gap:7px}
+.lockbox .row .btn{flex:1; padding:8px}
+.linkish{
+  font:inherit; font-size:7.6pt; color:var(--ink-3); background:none; border:0;
+  cursor:pointer; text-decoration:underline; padding:2px; align-self:flex-start;
+}
+.linkish:hover{color:var(--seal)}
+.lock-wrap{position:relative}
+.lockmenu{
+  position:absolute; top:calc(100% + 5px); right:0; z-index:60; width:190px;
+  background:var(--paper); border:1px solid var(--rule-strong); border-radius:3px;
+  box-shadow:0 6px 24px rgba(0,0,0,.18); padding:5px;
+  display:flex; flex-direction:column; gap:3px;
+}
+.lockmenu[hidden]{display:none}
+.lockmenu button{
+  font:inherit; font-size:8.4pt; text-align:left; padding:7px 9px; cursor:pointer;
+  background:transparent; border:0; border-radius:2px; color:var(--ink);
+}
+.lockmenu button:hover{background:var(--panel)}
+.lockmenu button.danger:hover{color:var(--seal)}
+.privacy{font-size:7pt; color:var(--ink-3); margin-top:5px; line-height:1.5}
+.privacy b{color:var(--ink-2); font-weight:600}
 </style>
 </head>
 <body class="mode-edit">
@@ -513,6 +563,14 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
   </div>
   <button type="button" class="btn" id="bImport">불러오기</button>
   <button type="button" class="btn" id="bExport">백업 저장</button>
+  <div class="lock-wrap">
+    <button type="button" class="btn" id="bLock">잠금 설정</button>
+    <div class="lockmenu" id="lockMenu" hidden>
+      <button type="button" id="mLockNow">지금 잠그기</button>
+      <button type="button" id="mLockChange">암호 변경</button>
+      <button type="button" class="danger" id="mLockOff">잠금 해제</button>
+    </div>
+  </div>
   <button type="button" class="btn btn-primary" id="bPrint">인쇄 · PDF</button>
   <input type="file" id="fileIn" accept="application/json" hidden>
 </div>
@@ -548,6 +606,19 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
   </div>
   <div class="calc-out" id="calcOut" hidden></div>
   <div class="legend">계산 결과는 초안입니다. 모든 칸은 그대로 고쳐 쓸 수 있고, 고친 칸은 밑줄 표시가 사라집니다.</div>
+  <div class="privacy" id="privacyNote"></div>
+</div>
+
+<div class="lockscreen" id="lockScreen" hidden>
+  <div class="lockbox">
+    <h2>잠긴 보관함<small>LOCKED</small></h2>
+    <p>이 컴퓨터에 저장된 감정 자료가 암호로 잠겨 있습니다.
+       암호를 넣어야 의뢰인 목록과 작성 내용이 열립니다.</p>
+    <input type="password" id="lockPass" placeholder="암호" autocomplete="current-password" aria-label="암호">
+    <div class="err" id="lockErr"></div>
+    <div class="row"><button type="button" class="btn btn-primary" id="bUnlock">열기</button></div>
+    <button type="button" class="linkish" id="bForget">암호를 잊었습니다 — 저장분을 지우고 새로 시작</button>
+  </div>
 </div>
 
 <main id="doc">
@@ -1010,7 +1081,11 @@ function nowISO(){ return new Date().toISOString(); }
 function loadDB(){
   try{
     var raw = localStorage.getItem(STORE);
-    if(raw){ var o = JSON.parse(raw); if(o && o.clients){ db = o; return true; } }
+    if(raw){
+      var o = JSON.parse(raw);
+      if(o && o.enc) return "locked";
+      if(o && o.clients){ db = o; return true; }
+    }
     // 이전 단일 문서 형식이 남아 있으면 첫 의뢰인으로 옮겨 온다
     var old1 = localStorage.getItem("saju-gamjeongseo-v1");
     if(old1){
@@ -1024,9 +1099,40 @@ function loadDB(){
   }catch(e){}
   return false;
 }
+/* ── 잠금 (AES-GCM · PBKDF2) ────────────────────────────────
+   암호를 걸면 localStorage 에는 암호문만 남는다. 같은 컴퓨터를 쓰는
+   다른 사람이나 다른 로컬 페이지가 열어도 읽어 갈 수 없다. */
+var lockKey = null, lockSalt = null;
+function b64(buf){
+  var u = new Uint8Array(buf), s = "";
+  for(var i = 0; i < u.length; i++) s += String.fromCharCode(u[i]);
+  return btoa(s);
+}
+function unb64(str){
+  var bin = atob(str), u = new Uint8Array(bin.length);
+  for(var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  return u;
+}
+function deriveKey(pass, salt){
+  var enc = new TextEncoder();
+  return crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"])
+    .then(function(base){
+      return crypto.subtle.deriveKey(
+        { name:"PBKDF2", salt:salt, iterations:250000, hash:"SHA-256" },
+        base, { name:"AES-GCM", length:256 }, false, ["encrypt","decrypt"]);
+    });
+}
 function persist(){
-  try{ localStorage.setItem(STORE, JSON.stringify(db)); return true; }
-  catch(e){ note.textContent = "저장 실패 — 저장 공간 확인"; return false; }
+  try{
+    if(!lockKey){ localStorage.setItem(STORE, JSON.stringify(db)); return true; }
+    var iv = crypto.getRandomValues(new Uint8Array(12));
+    var plain = new TextEncoder().encode(JSON.stringify(db));
+    crypto.subtle.encrypt({ name:"AES-GCM", iv:iv }, lockKey, plain).then(function(ct){
+      localStorage.setItem(STORE, JSON.stringify(
+        { v:3, enc:1, salt:lockSalt, iv:b64(iv), data:b64(ct) }));
+    })["catch"](function(){ note.textContent = "저장 실패"; });
+    return true;
+  }catch(e){ note.textContent = "저장 실패 — 저장 공간 확인"; return false; }
 }
 function current(){ return db.clients[db.activeId] || null; }
 
@@ -1677,23 +1783,136 @@ fileIn.addEventListener("change", function(){
   fileIn.value = "";
 });
 
+/* ── 잠금 UI ──────────────────────────────────────────────── */
+var lockScreen = g("lockScreen"), lockMenu = g("lockMenu"),
+    lockPass = g("lockPass"), lockErr = g("lockErr");
+
+function isLocked(){ return !lockScreen.hidden; }
+function hasPasscode(){
+  try{ var o = JSON.parse(localStorage.getItem(STORE) || "{}"); return !!o.enc; }
+  catch(e){ return false; }
+}
+function renderLockBtn(){
+  var on = !!lockKey;
+  g("bLock").textContent = on ? "잠그기" : "잠금 설정";
+  g("privacyNote").innerHTML = on
+    ? '<b>잠금 켜짐.</b> 이 컴퓨터에 암호문으로만 저장되며, 암호 없이는 아무도 열 수 없습니다.'
+    : '자료는 <b>이 컴퓨터의 브라우저 안에만</b> 저장되고 밖으로 나가지 않습니다. ' +
+      '다른 컴퓨터에서 이 파일을 열어도 보이지 않습니다. ' +
+      '다만 <b>같은 컴퓨터를 같이 쓰는 사람에게는 보이니</b>, 필요하면 잠금을 거십시오.';
+}
+function showLockScreen(msg){
+  lockErr.textContent = msg || "";
+  lockPass.value = "";
+  lockScreen.hidden = false;
+  setTimeout(function(){ lockPass.focus(); }, 30);
+}
+function lockNow(){
+  if(!lockKey) return;
+  flushSave();
+  lockKey = null;                       // 열쇠를 버리면 화면에서도 사라진다
+  db = { v:3, activeId:null, clients:{} };
+  clearAllFields(); writeBirth({});
+  renderClientBar(); renderLockBtn();
+  showLockScreen("");
+}
+function tryUnlock(){
+  var pass = lockPass.value;
+  if(!pass){ lockErr.textContent = "암호를 넣어 주십시오."; return; }
+  var blob;
+  try{ blob = JSON.parse(localStorage.getItem(STORE)); }
+  catch(e){ lockErr.textContent = "저장분을 읽을 수 없습니다."; return; }
+  lockErr.textContent = "여는 중…";
+  deriveKey(pass, unb64(blob.salt)).then(function(key){
+    return crypto.subtle.decrypt({ name:"AES-GCM", iv:unb64(blob.iv) }, key, unb64(blob.data))
+      .then(function(pt){
+        db = JSON.parse(new TextDecoder().decode(pt));
+        lockKey = key; lockSalt = blob.salt;
+        if(!Object.keys(db.clients || {}).length) createClient("새 의뢰인");
+        if(!db.activeId || !db.clients[db.activeId]) db.activeId = Object.keys(db.clients)[0];
+        var c = current();
+        writeAll(c.fields || {}); writeBirth(c.birth || {});
+        lockScreen.hidden = true;
+        renderClientBar(); renderClientList(); renderLockBtn();
+        note.textContent = "이어서 작업";
+      });
+  })["catch"](function(){ lockErr.textContent = "암호가 맞지 않습니다."; });
+}
+g("bUnlock").addEventListener("click", tryUnlock);
+lockPass.addEventListener("keydown", function(e){ if(e.key === "Enter") tryUnlock(); });
+g("bForget").addEventListener("click", function(){
+  if(!confirm("암호가 없으면 저장분을 되살릴 수 없습니다.\n이 컴퓨터에 저장된 감정 자료를 모두 지우고 새로 시작할까요?")) return;
+  if(!confirm("정말 지웁니다. 되돌릴 수 없습니다.")) return;
+  try{ localStorage.removeItem(STORE); }catch(e){}
+  location.reload();
+});
+
+function askNewPasscode(){
+  var p1 = prompt("새 암호를 정하십시오. (잊으면 저장분을 되살릴 수 없습니다)");
+  if(p1 == null) return null;
+  p1 = p1.trim();
+  if(p1.length < 4){ alert("암호는 네 글자 이상으로 정해 주십시오."); return null; }
+  var p2 = prompt("확인을 위해 한 번 더 넣어 주십시오.");
+  if(p2 == null) return null;
+  if(p1 !== p2.trim()){ alert("두 번 넣은 암호가 다릅니다."); return null; }
+  return p1;
+}
+function setPasscode(pass, done){
+  var salt = crypto.getRandomValues(new Uint8Array(16));
+  deriveKey(pass, salt).then(function(key){
+    lockKey = key; lockSalt = b64(salt);
+    persist(); renderLockBtn();
+    if(done) done();
+  })["catch"](function(){ alert("암호를 거는 데 실패했습니다."); });
+}
+g("bLock").addEventListener("click", function(e){
+  e.stopPropagation();
+  if(!lockKey){
+    if(!(window.crypto && crypto.subtle)){
+      alert("이 브라우저에서는 잠금을 쓸 수 없습니다."); return;
+    }
+    var p = askNewPasscode(); if(!p) return;
+    setPasscode(p, function(){ alert("잠금을 걸었습니다. 다음에 열 때 암호를 묻습니다."); });
+  } else {
+    lockMenu.hidden = !lockMenu.hidden;
+  }
+});
+document.addEventListener("click", function(e){
+  if(!lockMenu.hidden && !lockMenu.contains(e.target)) lockMenu.hidden = true;
+});
+g("mLockNow").addEventListener("click", function(){ lockMenu.hidden = true; lockNow(); });
+g("mLockChange").addEventListener("click", function(){
+  lockMenu.hidden = true;
+  var p = askNewPasscode(); if(!p) return;
+  setPasscode(p, function(){ alert("암호를 바꿨습니다."); });
+});
+g("mLockOff").addEventListener("click", function(){
+  lockMenu.hidden = true;
+  if(!confirm("잠금을 풉니다. 이 컴퓨터를 같이 쓰는 사람에게 자료가 보이게 됩니다. 계속할까요?")) return;
+  lockKey = null; lockSalt = null;
+  persist(); renderLockBtn();
+});
+
 /* ── 단축키 ───────────────────────────────────────────────── */
 document.addEventListener("keydown", function(e){
+  if(isLocked()) return;
   if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s"){ e.preventDefault(); g("bExport").click(); }
-  if(e.key === "Escape" && !drop.hidden) toggleDrop(false);
+  if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "l" && lockKey){ e.preventDefault(); lockNow(); }
+  if(e.key === "Escape"){ if(!drop.hidden) toggleDrop(false); if(!lockMenu.hidden) lockMenu.hidden = true; }
 });
 
 /* ── 초기화 ───────────────────────────────────────────────── */
 (function init(){
   setFloors();
-  var had = loadDB();
-  if(!had || !Object.keys(db.clients).length){ createClient("새 의뢰인"); }
+  var state = loadDB();
+  if(state === "locked"){ renderLockBtn(); showLockScreen(""); return; }
+  if(!state || !Object.keys(db.clients).length){ createClient("새 의뢰인"); }
   if(!db.activeId || !db.clients[db.activeId]) db.activeId = Object.keys(db.clients)[0];
   var c = current();
   writeAll(c.fields || {});
   writeBirth(c.birth || {});
-  persist(); renderClientBar(); renderClientList();
-  note.textContent = had ? "이어서 작업" : "새 문서";
+  persist(); renderClientBar(); renderClientList(); renderLockBtn();
+  note.textContent = state ? "이어서 작업" : "새 문서";
   g("calcPanel").hidden = !!(c.fields && c.fields["ms.gan.il"]);
   window.addEventListener("resize", checkOverflow);
   window.addEventListener("beforeprint", function(){ setMode(true); });
