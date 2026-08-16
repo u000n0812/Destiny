@@ -23,6 +23,7 @@
 
 /* ── 근거 표시 ───────────────────────────────────────────── */
 var SRC = {
+  S0: { tag:"직접", name:"직접 알려 주신 정리",     rank:1 },
   S1: { tag:"자료1", name:"사주명리 기초 강의 노트", rank:1 },
   S2: { tag:"자료2", name:"음양오행·천간지지 노트", rank:1 },
   S3: { tag:"자료3", name:"사주팔자와 운 노트",     rank:1 },
@@ -118,6 +119,44 @@ var PILLAR_MEAN = {
 var DAEUN_WX = ["창조하고 만들어 내는 일", "알리고 드러내는 일", "중재하고 쌓아 두는 일",
                 "내실을 다지는 일(전자·금융·법무·기계)", "보이지 않는 것을 좇는 일(연구·종교·철학)"];
 
+/* ── 1순위 · 직접 알려 주신 정리 ─────────────────────────── */
+
+// 오행 점수가 높을 때 — [직접]
+var WX_HIGH = [
+  { 강:"성장욕이 있고 진취적입니다. 주변 사람을 기분 좋게 하고 순발력이 좋으며 망설임이 없습니다.",
+    주의:"천진난만해 눈치가 없을 수 있고, 일을 벌여 놓고 수습을 못하기도 하며 현실 감각이 떨어질 수 있습니다." },
+  { 강:"정의감이 있고 성격이 시원해 대인관계가 좋습니다. 자기 매력을 어필하는 데 능합니다.",
+    주의:"감정선이 크게 흔들릴 수 있어 타협이 필요합니다." },
+  { 강:"공격적이지도 방어적이지도 않게 있는 그대로 받아들입니다. 끈기가 있어 나이가 들며 빛을 보고, 한번 시작하면 끝을 보려 해 중도에 잘 포기하지 않습니다. 묘한 분위기가 있어 이미지가 좋은 경우가 많습니다.",
+    주의:"안으로 파고드는 것은 잘하는데 자기 어필을 못하는 편이니, 일단 시작해 보는 것이 중요합니다." },
+  { 강:"성격이 칼 같고 두루뭉술한 표현을 싫어합니다. 법·의료·경찰처럼 분명한 일이 어울립니다.",
+    주의:"내향적인 경우가 많아 사람 다루는 법을 배울 필요가 있습니다. 한순간의 실수로 남을 다치게 할 수 있으니 화를 다스리고, 자기계발과 취미로 감정을 풀어야 합니다." },
+  { 강:"생각이 깊고 예술가적 기질이 있습니다.",
+    주의:"고민이 많고 우울감을 잘 느끼니 현실성을 따로 챙겨야 합니다." }
+];
+// 점수 등급을 어떻게 다룰 것인가 — [직접]
+var GRADE_ADVICE = {
+  "과다":"과다는 그 기운을 다루는 연습이 필요합니다. 잘 다듬으면 오히려 극장점이 됩니다.",
+  "발달":"발달은 장점이니 이것을 어떻게 드러낼지를 생각하십시오.",
+  "미약":"미약은 어떻게 보완할지를 생각해야 합니다."
+};
+// 일간 · 일지에 대해 따로 알려 주신 것 — [직접]
+var ILGAN_ADD = {
+  "丙":"태양입니다. 외향적이고 사람들과 잘 섞이며 인간성이라는 말을 중요하게 여깁니다. 남에게 자기를 드러내는 일을 하면 좋습니다."
+};
+var ILJI_ADD = {
+  "申":"완벽주의 기질이 있습니다. 모방에 능하고 잡기가 많아 잘하는 것들을 하나로 잇는 일이 중요합니다. 논리와 데이터에 강하고, 학문보다 기술과 재능으로 성공하는 경우가 많습니다. 역마 기질이 강하며 사람에 대한 회의가 들 때가 있습니다."
+};
+// 계절 — 일간의 오행 계절과 월지의 계절을 견주기 위한 표 [직접]
+var WX_SEASON = ["봄","여름","환절기","가을","겨울"];
+function jiSeason(ji){
+  if ("寅卯辰".indexOf(ji) >= 0) return "봄";
+  if ("巳午未".indexOf(ji) >= 0) return "여름";
+  if ("申酉戌".indexOf(ji) >= 0) return "가을";
+  if ("亥子丑".indexOf(ji) >= 0) return "겨울";
+  return "";
+}
+
 /* ── 2순위 · 추가 참고자료 ───────────────────────────────── */
 var UNSEONG_NOTE = {   // [참고] 십이운성 일반 해설
   "장생":"기운이 새로 돋는 자리", "목욕":"아직 다듬어지지 않은 자리", "관대":"틀을 갖추는 자리",
@@ -192,14 +231,30 @@ function generate(a, S){
     "에 해당하고, 월지 " + p.wol.ji + "에서 계절의 도움을 " +
     (st.deukRyeong ? "받습니다" : "받지 못합니다") +
     ". 월지가 무엇을 차지하느냐에 따라 사주의 판도가 갈립니다." + u("S2","S1"));
-  if (many.length)
-    총평.push("오행으로는 " + many.map(wx).join("·") + J(WK[many[many.length-1]], "이", "가") +
-      " 두드러집니다. " + WX_TRAIT[many[0]].많 + u("S2"));
-  if (none.length)
-    총평.push("반대로 " + none.map(wx).join("·") + J(WK[none[none.length-1]], "이", "가") +
-      " 원국에 없습니다. " + WX_TRAIT[none[0]].없 + u("S2"));
-  총평.push("치우친 기운은 중화되는 시기를 기다리는 것이 곧 운입니다. 이 명식에서는 " +
-    wx(ys.yong) + J(WK[ys.yong], "이", "가") + " 그 자리를 맡습니다." + u("S3","S1"));
+  // 점수 등급 — 20 미만 미약, 25~45 발달, 50 이상 과다 [직접]
+  var sp = a.special || {};
+  var gr = sp.grades || [];
+  var strong = [], weakest = [];
+  for (i = 0; i < 5; i++){
+    if (gr[i] === "과다" || gr[i] === "발달~과다") strong.push(i);
+    if (gr[i] === "미약") weakest.push(i);
+  }
+  총평.push("오행 점수는 " + WK.map(function(k, n){ return k + sc[n]; }).join(" ") +
+    "입니다. " + WK.map(function(k, n){ return k + " " + gr[n]; }).join(", ") +
+    "입니다." + u("S0"));
+  if (strong.length){
+    var s0 = strong[0];
+    총평.push(wx(s0) + J(WK[s0], "이", "가") + " " + gr[s0] + "합니다. " + WX_HIGH[s0].강 +
+      " 다만 " + WX_HIGH[s0].주의 + u("S0"));
+    총평.push(GRADE_ADVICE[gr[s0] === "발달" ? "발달" : "과다"] + u("S0"));
+  }
+  if (weakest.length)
+    총평.push("반대로 " + weakest.map(wx).join("·") + J(WK[weakest[weakest.length-1]], "이", "가") +
+      " 미약합니다. " + WX_TRAIT[weakest[0]].없 + " " + GRADE_ADVICE["미약"] + u("S0","S2"));
+  if (sp.yangEight)
+    총평.push("여덟 자가 모두 양인 양팔통입니다. 한쪽으로 온전히 쏠린 구조라 드러내고 밀고 나가는 힘이 크되, 거두어들이는 자리가 없습니다." + u("S0"));
+  if (sp.yinEight)
+    총평.push("여덟 자가 모두 음인 음팔통입니다. 안으로 거두는 힘이 크되, 밖으로 펼쳐 내는 자리가 없습니다." + u("S0"));
 
   /* 기질 키워드 */
   var kw = [];
@@ -214,21 +269,33 @@ function generate(a, S){
 
   /* 기질 */
   var 기질 = [];
-  기질.push(IG.강 + " 다만 " + IG.약 + u("S3"));
   if (top)
-    기질.push("십성으로는 " + top.name + "이 " + top.n + "자로 가장 두텁습니다. " +
+    기질.push("십성으로는 " + top.name + J(top.name, "이", "가") + " " + top.n + "자로 가장 두텁습니다. " +
       SIP[top.name].강 + " 반대로 " + SIP[top.name].약 + u("S3"));
   if (bg >= 3)
     기질.push("비견과 겁재를 합쳐 " + bg + "자로, 보통 서넛을 넘으면 많다고 봅니다. " +
       "내 것을 나누려는 사람이 주변에 많다는 뜻이어서 의심과 강박이 함께 붙습니다." + u("S1"));
-  기질.push("천간은 하고 싶은 마음이고 지지는 실제로 벌어지는 일입니다. 천간 " +
+  // 일간과 같은 오행이 주변에 얼마나 있는가 [직접]
+  var ilWx = S.GAN_WX[S.GAN.indexOf(ilgan)];
+  기질.push(cnt[ilWx] >= 3
+    ? "일간과 같은 " + wx(ilWx) + J(WK[ilWx], "이", "가") + " 주변에 " + cnt[ilWx] +
+      "자로 여럿입니다. 타고난 성질을 밖으로 잘 내보낼 수 있다는 뜻입니다." + u("S0")
+    : "일간과 같은 " + wx(ilWx) + J(WK[ilWx], "은", "는") + " 일간을 빼면 " + (cnt[ilWx] - 1) +
+      "자뿐입니다. 타고난 성질을 잘 드러내지는 않는 쪽입니다." + u("S0"));
+  if (sp.byeongjon && sp.byeongjon.length)
+    기질.push(sp.byeongjon.join(", ") + "이 있습니다. 같은 글자가 나란히 서면 그 기운이 겹쳐 두드러지게 드러납니다." + u("S0"));
+  if (ILGAN_ADD[ilgan]) 기질.push("일간 " + ilgan + "은 " + ILGAN_ADD[ilgan] + u("S0"));
+  기질.push("천간은 하고 싶은 마음이고 지지는 그것을 실현하는 도구입니다. 천간 " +
     [p.nyeon.gan, p.wol.gan, p.si.gan].join("·") + "이 바라는 바라면, 지지 " +
-    [p.nyeon.ji, p.wol.ji, p.il.ji, p.si.ji].join("·") + "이 그것이 실제로 일어나는 자리입니다." + u("S2"));
+    [p.nyeon.ji, p.wol.ji, p.il.ji, p.si.ji].join("·") + "이 그것이 실제로 일어나는 자리입니다." + u("S2","S0"));
 
   /* 성격과 내면 */
   var 성격 = [];
   성격.push("일간 " + ilgan + "은 " + IG.img + "입니다. " + IG.강 + u("S3"));
   성격.push("그늘 쪽을 보면, " + IG.약 + u("S3"));
+  성격.push("일지 " + p.il.ji + J(S.JI_KO[S.JI.indexOf(p.il.ji)], "은", "는") +
+    " 나의 기본 자질에 해당하는 자리입니다." +
+    (ILJI_ADD[p.il.ji] ? " " + ILJI_ADD[p.il.ji] : "") + u("S0"));
   성격.push("일지 " + p.il.ji + "은 십이운성으로 " + a.unseong.il + ", " +
     (UNSEONG_NOTE[a.unseong.il] || "") + "입니다. 스스로를 어떤 상태에 두고 사는지를 보여 주는 자리입니다." +
     u("R1","S1"));
@@ -243,6 +310,8 @@ function generate(a, S){
     : "일지를 직접 치는 형·충·파·해가 없어 배우자 자리 자체는 비교적 안정된 편입니다." + u("S2"));
   if (gwan === 0 && jae === 0)
     관계.push("관성과 재성이 모두 없습니다. 배우자에 해당하는 십성이 원국에 없으면 대운과 세운에서 그 기운이 들어오는 때를 기다리게 됩니다." + u("S1"));
+  if (a.sipseong.ji.il === "편재" && a.sex === "M")
+    관계.push("일지가 편재이고 남성이므로 이 자리는 이성을 뜻합니다. 상대를 통제하려는 성질이 있고 관계의 선이 분명한 편입니다." + u("S0"));
   if (a.sinsal.indexOf("도화") >= 0)
     관계.push("도화가 있어 사람을 끄는 기운이 있습니다. 관계가 쉽게 열리는 만큼 정리도 분명해야 합니다." + u("R2"));
 
@@ -259,6 +328,11 @@ function generate(a, S){
      : jae >= 2 && st.weak ? "재성은 두터운데 일간이 약합니다. 기회에 비해 실제로 벌지 못하거나 분쟁에 휘말릴 수 있어, 힘을 먼저 채워야 합니다."
      : sik >= 2 ? "재성이 두텁지 않아도 식상이 유리하게 서 있으니, 성실하게 쌓아 올리는 방식이면 사업도 가능합니다."
      : "재성과 식상이 모두 얇아, 큰 판을 벌이기보다 안정된 수입 구조가 맞습니다.") + u("S1"));
+  var ilSeason = WX_SEASON[S.GAN_WX[S.GAN.indexOf(ilgan)]], wolSeason = jiSeason(p.wol.ji);
+  직업.push("월지는 직장생활을 보는 자리입니다. 일간 " + ilgan + "의 계절은 " + ilSeason +
+    ", 월지 " + p.wol.ji + "의 계절은 " + wolSeason + "입니다." +
+    (ilSeason === wolSeason ? " 둘이 같으니 그 계절에 해당하는 오행의 직업을 고르면 됩니다."
+                            : " 둘이 다르니 하고 싶은 일과 몸담는 자리가 갈릴 수 있습니다.") + u("S0"));
   직업.push("용신 " + wx(ys.yong) + " 쪽으로는 " + DAEUN_WX[ys.yong] + "이 어울립니다." + u("S2"));
   var hyeong = a.relations.filter(function(r){ return /형/.test(r); });
   if (hyeong.length)
@@ -299,6 +373,12 @@ function generate(a, S){
   if (bad.length)
     제언.push("반대로 " + bad.map(function(r){ return r.from + "~" + r.to + "세"; }).join(", ") +
       " 구간은 기신 쪽입니다. 운과 운 사이 간절기에는 충돌과 변동이 몰리니 대운이 바뀌는 앞뒤 두어 해를 특히 조심하십시오." + u("S3"));
+  if (sp.sal && sp.sal.same && sp.sal.il)
+    제언.push("일지와 월지가 모두 " + sp.sal.il.name + "(" + sp.sal.il.members.join("") +
+      ")에 들어 " + sp.sal.il.sal.join("·") + "이 강하게 발현합니다. 일지와 월지는 일간을 받치는 자리라 그렇습니다." + u("S0"));
+  var chungs = a.relations.filter(function(r){ return /충/.test(r); });
+  if (chungs.length)
+    제언.push("충(" + chungs.join(", ") + ")은 인생에서 예기치 못한 사건으로 나타납니다. 미리 막기보다 벌어졌을 때 빨리 수습하는 쪽으로 대비하십시오." + u("S0"));
   if (top) 제언.push(SIP[top.name].조언 + u("S3"));
   제언.push("타고난 것은 기질이고, 그 기질이 어떤 환경을 만나느냐에 따라 발현이 달라집니다. 한 분야에서 너무 어려운 상황만 없으면 좋은 사주라고 봅니다." + u("S1"));
   제언.push("개운으로는 " + a.remedy.color + " 계열, " + a.remedy.dir + "쪽 방위, " + a.remedy.time +
@@ -310,15 +390,15 @@ function generate(a, S){
 
   // A4 3매에 들어가도록 항목별 분량을 제한한다
   return {
-    summary: fit(총평, 370),
+    summary: fit(총평, 372),
     keywords: kw.slice(0, 6).join(", "),
-    temperament: fit(기질, 250),
-    personality: fit(성격, 175),
-    relation: fit(관계, 170),
-    career: fit(직업, 245),
-    wealth: fit(재물, 180),
-    health: fit(건강, 145),
-    advice: fit(제언, 470),
+    temperament: fit(기질, 248),
+    personality: fit(성격, 208),
+    relation: fit(관계, 158),
+    career: fit(직업, 258),
+    wealth: fit(재물, 165),
+    health: fit(건강, 130),
+    advice: fit(제언, 555),
     tags: {
       personality: (top ? top.name + " 중심 · " : "") + IG.img,
       relation: "일지 " + p.il.ji + " " + a.sipseong.ji.il,

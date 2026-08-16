@@ -300,6 +300,55 @@ function gongmang(dayIdx60){
   return [JI[base], JI[mod(base+1, 12)]];
 }
 
+/* ── 지지 세 그룹과 살 ───────────────────────────────────
+   寅申巳亥 생지 → 역마, 子午卯酉 왕지 → 도화·홍염, 辰戌丑未 고지 → 화개.
+   각 그룹을 둘씩 가르면 그대로 충하는 짝이 된다. */
+var JI_GROUP = [
+  { name:"생지", sal:["역마"],        members:["寅","申","巳","亥"] },
+  { name:"왕지", sal:["도화","홍염"], members:["子","午","卯","酉"] },
+  { name:"고지", sal:["화개"],        members:["辰","戌","丑","未"] }
+];
+function groupOf(ji){
+  for (var i = 0; i < JI_GROUP.length; i++)
+    if (JI_GROUP[i].members.indexOf(ji) >= 0) return JI_GROUP[i];
+  return null;
+}
+// 오행 점수 등급 — 20 미만 미약, 25~45 발달, 50 이상 과다
+function gradeOf(score){
+  if (score >= 50) return "과다";
+  if (score >= 46) return "발달~과다";
+  if (score >= 25) return "발달";
+  if (score >= 20) return "미약~발달";
+  return "미약";
+}
+// 양팔통 · 음팔통 · 병존
+function specials(p){
+  var order = ["si","il","wol","nyeon"];
+  var gans = order.map(function(k){ return p[k].gan; });
+  var jis  = order.map(function(k){ return p[k].ji; });
+  var yang = 0, yin = 0;
+  gans.forEach(function(g){ if (GAN_YANG[GAN.indexOf(g)]) yang++; else yin++; });
+  jis.forEach(function(j){ if (JI.indexOf(j) % 2 === 0) yang++; else yin++; });
+
+  var bj = [];
+  for (var i = 0; i < 3; i++){
+    if (gans[i] === gans[i+1]) bj.push(gans[i] + gans[i+1] + " 천간병존");
+    if (jis[i]  === jis[i+1])  bj.push(jis[i]  + jis[i+1]  + " 지지병존");
+  }
+
+  var ilG = groupOf(p.il.ji), wolG = groupOf(p.wol.ji);
+  var sal = { il:ilG, wol:wolG, same: !!(ilG && wolG && ilG.name === wolG.name) };
+
+  // 네 지지가 어느 그룹에 몇 자씩 걸리는지
+  var spread = JI_GROUP.map(function(gp){
+    return { name:gp.name, sal:gp.sal,
+             hits: jis.filter(function(j){ return gp.members.indexOf(j) >= 0; }) };
+  });
+
+  return { yang:yang, yin:yin, yangEight:(yang === 8), yinEight:(yin === 8),
+           byeongjon:bj, sal:sal, spread:spread };
+}
+
 /* ── 기둥 세우기 ─────────────────────────────────────────── */
 function computeChart(o){
   var lon = (o.lon == null ? 126.978 : o.lon);
@@ -625,9 +674,16 @@ function analyze(input){
   var sinsal = findSinsal(p);
   if (jis.indexOf(gm[0]) >= 0 || jis.indexOf(gm[1]) >= 0) sinsal.push("공망 " + gm.join(""));
 
+  var sp = specials(p);
+  sp.grades = prof.scores.map(gradeOf);
+  // 살 그룹에서 나온 것도 신살 목록에 반영한다
+  sp.spread.forEach(function(gp){
+    if (gp.hits.length) gp.sal.forEach(function(nm){ if (sinsal.indexOf(nm) < 0) sinsal.push(nm); });
+  });
+
   return {
-    chart: chart, pillars: p, profile: prof, strength: str, johu: jh,
-    gyeokguk: gg, yongsin: ys, daeun: du, sinsal: sinsal, gongmang: gm,
+    chart: chart, pillars: p, sex: input.sex, profile: prof, strength: str, johu: jh,
+    gyeokguk: gg, yongsin: ys, daeun: du, sinsal: sinsal, gongmang: gm, special: sp,
     relations: findRelations(gans, jis),
     remedy: {
       wx: WX_HANJA[ys.yong] + " · " + WX_HANJA[ys.hui],
@@ -664,6 +720,7 @@ return {
   computeChart:computeChart, analyze:analyze,
   sipseong:sipseong, sipseongOfJi:sipseongOfJi, unseong:unseong,
   findRelations:findRelations, findSinsal:findSinsal, gongmang:gongmang,
-  lunarDate:lunarDate, yearPillar:yearPillar, luckOf:luckOf, REMEDY:REMEDY
+  lunarDate:lunarDate, yearPillar:yearPillar, luckOf:luckOf, REMEDY:REMEDY,
+  JI_GROUP:JI_GROUP, groupOf:groupOf, gradeOf:gradeOf, specials:specials
 };
 });
