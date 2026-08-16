@@ -532,6 +532,35 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
 .lockmenu button.danger:hover{color:var(--seal)}
 .privacy{font-size:7pt; color:var(--ink-3); margin-top:5px; line-height:1.5}
 .privacy b{color:var(--ink-2); font-weight:600}
+
+/* ══════ 명식판 · 해석 도구 ══════ */
+.board{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:10px; margin-top:8px}
+.bcard{border:1px solid var(--rule-strong); border-radius:3px; background:var(--paper); padding:8px 10px 9px}
+.bcard h4{margin:0 0 5px; font-size:7.4pt; letter-spacing:.13em; color:var(--ink-3); font-weight:500}
+.bcard.wide{grid-column:1/-1}
+.btab{width:100%; border-collapse:collapse; font-size:8.2pt}
+.btab th,.btab td{border:1px solid var(--rule); padding:2px 5px; text-align:center}
+.btab th{background:var(--panel); font-weight:500; color:var(--ink-2); font-size:7pt; letter-spacing:.08em}
+.btab td.lbl{background:var(--panel); font-size:7pt; color:var(--ink-2); text-align:right; white-space:nowrap}
+.btab .big{font-family:var(--f-serif); font-size:15pt; line-height:1.2}
+.btab .sm{font-size:7.4pt; color:var(--ink-2)}
+.bwx-mok{color:var(--wx-mok)} .bwx-hwa{color:var(--wx-hwa)} .bwx-to{color:var(--wx-to)}
+.bwx-geum{color:var(--wx-geum)} .bwx-su{color:var(--wx-su)}
+.brow{display:flex; flex-wrap:wrap; gap:4px 10px; font-size:8.4pt; line-height:1.7}
+.brow b{font-weight:600}
+.bkv{display:flex; gap:5px} .bkv span{color:var(--ink-3); font-size:7.4pt; align-self:center}
+.bchip{font-size:7.6pt; padding:1.5px 7px; border:1px solid var(--rule-strong); border-radius:9px; color:var(--ink-2)}
+.bchip.hit{border-color:var(--seal); color:var(--seal)}
+.bchip.hap{border-color:var(--st-good); color:var(--st-good)}
+.bnone{font-size:7.8pt; color:var(--ink-3)}
+.ai-note{font-size:7.6pt; line-height:1.65; color:var(--ink-2); margin:0 0 7px}
+.ai-note b{color:var(--ink)}
+#aiOut{
+  width:100%; min-height:120px; font:inherit; font-size:8.6pt; line-height:1.6; padding:8px 10px;
+  border:1px solid var(--rule-strong); border-radius:2px; background:var(--paper); color:var(--ink); resize:vertical;
+}
+#aiOut:focus{outline:2px solid var(--accent); outline-offset:-1px}
+.srcline{font-size:7.2pt; color:var(--ink-3); margin-top:6px; line-height:1.6}
 </style>
 </head>
 <body class="mode-edit">
@@ -603,10 +632,35 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
         <option value="late">야자시 (당일 유지)</option>
       </select></div>
     <button type="button" class="btn btn-primary" id="bCalc" style="padding:7px 16px">자동 계산</button>
+    <button type="button" class="btn" id="bDraft" style="padding:7px 14px">해석 초안</button>
+    <button type="button" class="btn" id="bBoard" style="padding:7px 14px">명식판</button>
+    <button type="button" class="btn" id="bAi" style="padding:7px 14px">AI 보완</button>
   </div>
   <div class="calc-out" id="calcOut" hidden></div>
   <div class="legend">계산 결과는 초안입니다. 모든 칸은 그대로 고쳐 쓸 수 있고, 고친 칸은 밑줄 표시가 사라집니다.</div>
   <div class="privacy" id="privacyNote"></div>
+</div>
+
+<div class="panel no-print" id="boardPanel" hidden>
+  <h3>명식판 — 계산된 값 전부</h3>
+  <div class="board" id="board"></div>
+</div>
+
+<div class="panel no-print" id="aiPanel" hidden>
+  <h3>3순위 · AI 보완</h3>
+  <p class="ai-note">
+    올려 주신 자료(1순위)와 참고자료(2순위)로 채울 수 있는 것은 <b>해석 초안</b>이 이미 다 채웁니다.
+    여기는 그러고도 남는 자리를 메우는 곳입니다.
+    프롬프트에는 계산된 명식과 이미 정리된 내용이 함께 들어가므로,
+    AI는 <b>겹치지 않는 것만</b> 답하게 됩니다.
+    받아 온 답은 감정인이 읽고 필요한 대목만 골라 문서에 옮기십시오.
+    <b>이 칸의 내용은 인쇄되지 않습니다.</b>
+  </p>
+  <div class="pgrid" style="margin-bottom:7px">
+    <button type="button" class="btn btn-primary" id="bPrompt" style="padding:7px 14px">프롬프트 복사</button>
+    <button type="button" class="btn" id="bPromptShow" style="padding:7px 14px">프롬프트 보기</button>
+  </div>
+  <textarea id="aiOut" placeholder="챗지피티 등에서 받아 온 답을 여기에 붙여 두십시오. 의뢰인별로 저장됩니다."></textarea>
 </div>
 
 <div class="lockscreen" id="lockScreen" hidden>
@@ -985,6 +1039,7 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
 </main>
 
 <script src="saju.js"></script>
+<script src="interpret.js"></script>
 <script>
 (function(){
 "use strict";
@@ -1183,6 +1238,9 @@ function openClient(id){
   clearAllFields();
   writeAll(c.fields || {});
   writeBirth(c.birth || {});
+  g("aiOut").value = c.ai || "";
+  lastAnalysis = null; lastDraft = null;
+  if (!g("boardPanel").hidden) renderBoard();
   persist(); renderClientBar(); renderClientList();
   note.textContent = "불러옴";
   document.getElementById("calcOut").hidden = true;
@@ -1567,6 +1625,7 @@ function runCalc(){
   catch(err){
     calcOut.hidden = false;
     calcOut.innerHTML = '<span class="warn">계산에 실패했습니다: ' + esc(err.message) + '</span>';
+    lastAnalysis = null; lastDraft = null;
     return;
   }
 
@@ -1666,6 +1725,8 @@ function runCalc(){
   setAuto("r.num", a.remedy.num);
   setAuto("r.time", a.remedy.time);
 
+  lastAnalysis = a; lastDraft = null;
+  if (!g("boardPanel").hidden) renderBoard();
   refreshAll(); save();
 
   // 계산 요약
@@ -1684,6 +1745,198 @@ function runCalc(){
     '<div style="color:var(--ink-3);margin-top:3px">해석 문장(총평·성격·직업·재물·건강·제언)은 비워 두었습니다. 감정인이 채우는 자리입니다.</div>';
 }
 function pad2(n){ return String(n).padStart(2,"0"); }
+
+/* ── 명식판 ────────────────────────────────────────────────
+   만세력 앱처럼 계산된 값을 한자리에 다 펼쳐 둔다. 화면 전용이다. */
+var lastAnalysis = null, lastDraft = null;
+var POS4 = ["si","il","wol","nyeon"], POSKO = ["시주","일주","월주","년주"];
+
+function wxCls(ch){
+  if (typeof Saju === "undefined" || !ch) return "";
+  var gi = Saju.GAN.indexOf(ch), ji = Saju.JI.indexOf(ch);
+  var w = gi >= 0 ? Saju.GAN_WX[gi] : ji >= 0 ? Saju.JI_WX[ji] : -1;
+  return w < 0 ? "" : " bwx-" + Saju.WX_KEY[w];
+}
+function chips(arr, cls){
+  if (!arr || !arr.length) return '<span class="bnone">없음</span>';
+  return arr.map(function(x){ return '<span class="bchip ' + (cls||"") + '">' + esc(x) + '</span>'; }).join(" ");
+}
+function groupRelations(rel){
+  var g = { 합:[], 삼합:[], 반합:[], 방합:[], 육합:[], 충:[], 형:[], 파:[], 해:[] };
+  rel.forEach(function(r){
+    if (/삼합/.test(r)) g.삼합.push(r);
+    else if (/반합/.test(r)) g.반합.push(r);
+    else if (/방합/.test(r)) g.방합.push(r);
+    else if (/육합/.test(r)) g.육합.push(r);
+    else if (/충/.test(r)) g.충.push(r);
+    else if (/형/.test(r)) g.형.push(r);
+    else if (/파/.test(r)) g.파.push(r);
+    else if (/해/.test(r)) g.해.push(r);
+    else g.합.push(r);
+  });
+  return g;
+}
+function renderBoard(){
+  var box = g("board");
+  if (!lastAnalysis){ box.innerHTML = '<div class="bnone">먼저 자동 계산을 눌러 주십시오.</div>'; return; }
+  var a = lastAnalysis, p = a.pillars, S = Saju, W = S.WX_HANJA, WK = S.WX_KO;
+  var H = [];
+
+  // 원국
+  var rows = [
+    ["천간 십성", POS4.map(function(k){ return '<span class="sm">' + a.sipseong.gan[k] + '</span>'; })],
+    ["천간", POS4.map(function(k){ return '<span class="big' + wxCls(p[k].gan) + '">' + p[k].gan + '</span>'; })],
+    ["지지", POS4.map(function(k){ return '<span class="big' + wxCls(p[k].ji) + '">' + p[k].ji + '</span>'; })],
+    ["지지 십성", POS4.map(function(k){ return '<span class="sm">' + a.sipseong.ji[k] + '</span>'; })],
+    ["지장간", POS4.map(function(k){ return '<span class="sm">' + a.jijang[k] + '</span>'; })],
+    ["십이운성", POS4.map(function(k){ return '<span class="sm">' + a.unseong[k] + '</span>'; })]
+  ];
+  H.push('<div class="bcard wide"><h4>사주 원국</h4><table class="btab"><tr><th></th>' +
+    POSKO.map(function(t){ return "<th>" + t + "</th>"; }).join("") + "</tr>" +
+    rows.map(function(r){
+      return '<tr><td class="lbl">' + r[0] + "</td>" +
+        r[1].map(function(c){ return "<td>" + c + "</td>"; }).join("") + "</tr>";
+    }).join("") + "</table></div>");
+
+  // 오행
+  H.push('<div class="bcard"><h4>오행</h4><table class="btab"><tr><th></th>' +
+    WK.map(function(k, i){ return '<th class="bwx-' + S.WX_KEY[i] + '">' + W[i] + " " + k + "</th>"; }).join("") +
+    '</tr><tr><td class="lbl">개수</td>' + a.profile.counts.map(function(n){ return "<td>" + n + "</td>"; }).join("") +
+    '</tr><tr><td class="lbl">점수</td>' + a.profile.scores.map(function(n){ return "<td><b>" + n + "</b></td>"; }).join("") +
+    "</tr></table></div>");
+
+  // 십성 세력
+  var sipKo = { bigeop:"비겁", siksang:"식상", jaeseong:"재성", gwanseong:"관성", inseong:"인성" };
+  H.push('<div class="bcard"><h4>십성 세력</h4><table class="btab"><tr>' +
+    Object.keys(sipKo).map(function(k){ return "<th>" + sipKo[k] + "</th>"; }).join("") + "</tr><tr>" +
+    Object.keys(sipKo).map(function(k){ return "<td><b>" + a.profile.sip[k] + "</b></td>"; }).join("") +
+    "</tr></table></div>");
+
+  // 강약 · 격국 · 용신
+  H.push('<div class="bcard"><h4>강약 · 격국 · 용신</h4><div class="brow">' +
+    '<div class="bkv"><span>강약</span><b>' + a.strength.label + " " + a.strength.pct + "%</b></div>" +
+    '<div class="bkv"><span>득령</span>' + (a.strength.deukRyeong ? "O" : "X") + "</div>" +
+    '<div class="bkv"><span>득지</span>' + (a.strength.deukJi ? "O" : "X") + "</div>" +
+    '<div class="bkv"><span>득세</span>' + (a.strength.deukSe ? "O" : "X") + "</div>" +
+    '<div class="bkv"><span>한난조습</span>' + esc(a.johu.text) + "</div>" +
+    '<div class="bkv"><span>격국</span><b>' + esc(a.gyeokguk.name) + "</b></div>" +
+    '<div class="bkv"><span>용신·희신</span><b>' + W[a.yongsin.yong] + "·" + W[a.yongsin.hui] + "</b></div>" +
+    '<div class="bkv"><span>기신·구신</span>' + W[a.yongsin.gi] + "·" + W[a.yongsin.gu] + "</div>" +
+    "</div></div>");
+
+  // 형충회합
+  var gr = groupRelations(a.relations);
+  H.push('<div class="bcard wide"><h4>형충회합</h4><div class="brow">' +
+    ["합","육합","삼합","반합","방합","충","형","파","해"].map(function(k){
+      if (!gr[k].length) return "";
+      var cls = /충|형|파|해/.test(k) ? "hit" : "hap";
+      return '<div class="bkv"><span>' + k + "</span>" + chips(gr[k], cls) + "</div>";
+    }).join("") +
+    (a.relations.length ? "" : '<span class="bnone">없음</span>') + "</div></div>");
+
+  // 신살
+  H.push('<div class="bcard"><h4>신살 · 공망</h4><div class="brow">' +
+    chips(a.sinsal) + '<div class="bkv"><span>공망</span>' + a.gongmang.join("") + "</div></div></div>");
+
+  // 대운
+  H.push('<div class="bcard wide"><h4>대운 — ' + (a.daeun.forward ? "순행" : "역행") + " " +
+    a.daeun.startAge + '세부터</h4><table class="btab"><tr><th>나이</th>' +
+    a.daeun.list.map(function(r){ return "<th>" + r.from + "</th>"; }).join("") + "</tr>" +
+    '<tr><td class="lbl">간지</td>' + a.daeun.list.map(function(r){
+      return '<td><span class="big' + wxCls(r.gan) + '">' + r.gan + '</span><br><span class="big' +
+        wxCls(r.ji) + '">' + r.ji + "</span></td>"; }).join("") + "</tr>" +
+    '<tr><td class="lbl">십성</td>' + a.daeun.list.map(function(r){
+      return '<td><span class="sm">' + r.sipGan + "<br>" + r.sipJi + "</span></td>"; }).join("") + "</tr>" +
+    '<tr><td class="lbl">길흉</td>' + a.daeun.list.map(function(r){
+      return "<td>" + r.luck + "</td>"; }).join("") + "</tr></table></div>");
+
+  // 세운 10년
+  var y0 = new Date().getFullYear(), se = [];
+  for (var i = 0; i < 10; i++){
+    var yp = S.yearPillar(y0 + i);
+    se.push({ y:y0+i, gan:yp.gan, ji:yp.ji,
+      sip:S.sipseong(a.chart.ilganIdx, S.GAN.indexOf(yp.gan)),
+      luck:S.luckOf(S.GAN_WX[S.GAN.indexOf(yp.gan)], S.JI_WX[S.JI.indexOf(yp.ji)], a.yongsin) });
+  }
+  H.push('<div class="bcard wide"><h4>세운 — ' + y0 + "년부터 10년</h4><table class=\"btab\"><tr><th>해</th>" +
+    se.map(function(r){ return "<th>" + String(r.y).slice(2) + "</th>"; }).join("") + "</tr>" +
+    '<tr><td class="lbl">간지</td>' + se.map(function(r){
+      return '<td><span class="big' + wxCls(r.gan) + '">' + r.gan + '</span><span class="big' +
+        wxCls(r.ji) + '">' + r.ji + "</span></td>"; }).join("") + "</tr>" +
+    '<tr><td class="lbl">십성</td>' + se.map(function(r){
+      return '<td><span class="sm">' + r.sip + "</span></td>"; }).join("") + "</tr>" +
+    '<tr><td class="lbl">길흉</td>' + se.map(function(r){
+      return "<td>" + r.luck + "</td>"; }).join("") + "</tr></table></div>");
+
+  box.innerHTML = H.join("");
+}
+
+/* ── 해석 초안 (1·2순위) ───────────────────────────────────── */
+g("bDraft").addEventListener("click", function(){
+  if (typeof Interpret === "undefined"){
+    alert("해석 엔진(interpret.js)을 불러오지 못했습니다. 세 파일을 같은 폴더에 두십시오."); return;
+  }
+  if (!lastAnalysis){ alert("먼저 자동 계산을 눌러 주십시오."); return; }
+  var written = ["summary","temperament","p.personality","p.relation","p.career","p.wealth","p.health","advice"]
+    .some(function(k){ var el = document.querySelector('[data-k="'+k+'"]'); return el && el.value.trim(); });
+  if (written && !confirm("이미 쓰신 해석 문장이 있습니다. 초안으로 덮어쓸까요?")) return;
+
+  var d = Interpret.generate(lastAnalysis, Saju);
+  lastDraft = d;
+  setAuto("summary", d.summary);
+  setAuto("keywords", d.keywords);
+  setAuto("temperament", d.temperament);
+  setAuto("p.personality", d.personality);
+  setAuto("p.relation", d.relation);
+  setAuto("p.career", d.career);
+  setAuto("p.wealth", d.wealth);
+  setAuto("p.health", d.health);
+  setAuto("advice", d.advice);
+  Object.keys(d.tags).forEach(function(k){ setAuto("t." + k, d.tags[k]); });
+  refreshAll(); save();
+
+  calcOut.hidden = false;
+  calcOut.innerHTML = '<div><b>해석 초안을 채웠습니다.</b> 같은 생년월일시면 언제나 같은 문장이 나옵니다. ' +
+    '문장 끝의 대괄호가 근거입니다.</div>' +
+    '<div class="srcline">근거 — ' + d.sources.map(function(x){
+      return "[" + x.tag + "] " + esc(x.name); }).join(" · ") +
+    '<br>지면을 넘치면 감정인이 줄여 쓰십시오. 격국·용신처럼 유파가 갈리는 대목은 반드시 확인하십시오.</div>';
+  setTimeout(checkOverflow, 0);
+});
+
+/* ── 명식판 · AI 패널 ──────────────────────────────────────── */
+g("bBoard").addEventListener("click", function(){
+  var b = g("boardPanel");
+  b.hidden = !b.hidden;
+  if (!b.hidden) renderBoard();
+});
+g("bAi").addEventListener("click", function(){ g("aiPanel").hidden = !g("aiPanel").hidden; });
+g("aiOut").addEventListener("input", function(){
+  var c = current(); if (!c) return;
+  c.ai = g("aiOut").value; c.updatedAt = nowISO(); persist();
+});
+function currentPrompt(){
+  if (!lastAnalysis) return null;
+  return Interpret.buildPrompt(lastAnalysis, Saju, lastDraft);
+}
+g("bPrompt").addEventListener("click", function(){
+  var t = currentPrompt();
+  if (!t){ alert("먼저 자동 계산을 눌러 주십시오."); return; }
+  var ta = document.createElement("textarea");
+  ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  var ok = false;
+  try{ ok = document.execCommand("copy"); }catch(e){}
+  document.body.removeChild(ta);
+  note.textContent = ok ? "프롬프트 복사됨" : "복사 실패 — 보기로 확인";
+});
+g("bPromptShow").addEventListener("click", function(){
+  var t = currentPrompt();
+  if (!t){ alert("먼저 자동 계산을 눌러 주십시오."); return; }
+  g("aiOut").value = t;
+  g("aiOut").select();
+  note.textContent = "프롬프트를 아래 칸에 넣었습니다 — 복사해 쓰신 뒤 답으로 바꿔 주십시오";
+});
 
 /* ── 툴바 동작 ────────────────────────────────────────────── */
 g("bPrint").addEventListener("click", function(){
@@ -1715,6 +1968,7 @@ g("bNew").addEventListener("click", function(){
   flushSave();
   var c = createClient("새 의뢰인");
   clearAllFields(); writeBirth({}); calcOut.hidden = true;
+  g("aiOut").value = ""; lastAnalysis = null; lastDraft = null;
   persist(); renderClientBar(); renderClientList();
   g("calcPanel").hidden = false; iName.focus();
   note.textContent = "새 의뢰인";
@@ -1832,6 +2086,7 @@ function tryUnlock(){
         if(!db.activeId || !db.clients[db.activeId]) db.activeId = Object.keys(db.clients)[0];
         var c = current();
         writeAll(c.fields || {}); writeBirth(c.birth || {});
+        g("aiOut").value = c.ai || "";
         lockScreen.hidden = true;
         renderClientBar(); renderClientList(); renderLockBtn();
         note.textContent = "이어서 작업";
@@ -1911,6 +2166,7 @@ document.addEventListener("keydown", function(e){
   var c = current();
   writeAll(c.fields || {});
   writeBirth(c.birth || {});
+  g("aiOut").value = c.ai || "";
   persist(); renderClientBar(); renderClientList(); renderLockBtn();
   note.textContent = state ? "이어서 작업" : "새 문서";
   g("calcPanel").hidden = !!(c.fields && c.fields["ms.gan.il"]);
