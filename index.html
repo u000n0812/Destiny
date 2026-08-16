@@ -175,12 +175,12 @@ select.f{-webkit-appearance:none; appearance:none; cursor:pointer; padding-right
 
 /* 의뢰인 정보 스트립 */
 .client{
-  display:grid; grid-template-columns:repeat(4,1fr); gap:0;
+  display:grid; grid-template-columns:repeat(3,1fr); gap:0;
   border:1px solid var(--rule); border-radius:2px; overflow:hidden;
 }
 .client .cell{padding:3px 7px; border-right:1px solid var(--rule); border-bottom:1px solid var(--rule); min-width:0}
-.client .cell:nth-child(4n){border-right:0}
-.client .cell:nth-last-child(-n+4){border-bottom:0}
+.client .cell:nth-child(3n){border-right:0}
+.client .cell:nth-last-child(-n+3){border-bottom:0}
 .lbl{display:block; font-size:6.8pt; letter-spacing:.13em; color:var(--ink-3); margin-bottom:1px}
 .client .f{font-size:9pt}
 
@@ -596,7 +596,6 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
 </div>
 
 <div class="panel no-print" id="calcPanel">
-  <h3>의뢰인 정보 — 입력하면 만세력에 따라 명식부터 대운까지 채웁니다</h3>
   <div class="pgrid">
     <div class="fld w-name"><label for="iName">성명</label>
       <input id="iName" type="text" placeholder="박재윤"></div>
@@ -607,16 +606,6 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
     <div class="fld w-time"><label for="iTime">출생시각</label>
       <input id="iTime" type="time"></div>
     <div class="chk"><input type="checkbox" id="iNoTime"><label for="iNoTime">시각 모름</label></div>
-    <div class="fld"><label for="iPlace">출생지</label>
-      <select id="iPlace"></select></div>
-    <div class="fld w-lon"><label for="iLon">경도 °E</label>
-      <input id="iLon" type="number" step="0.001" value="126.978"></div>
-    <div class="fld"><label for="iTst">시각 보정</label>
-      <select id="iTst">
-        <option value="lon">경도 보정</option>
-        <option value="full">경도 + 균시차</option>
-        <option value="none">표준시 그대로</option>
-      </select></div>
     <div class="fld"><label for="iJasi">자시 기준</label>
       <select id="iJasi">
         <option value="early">조자시 (23시 이후 다음 날)</option>
@@ -629,7 +618,6 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
   </div>
   <div class="calc-out" id="calcOut" hidden></div>
   <div class="legend">계산 결과는 초안입니다. 모든 칸은 그대로 고쳐 쓸 수 있고, 고친 칸은 밑줄 표시가 사라집니다.</div>
-  <div class="privacy" id="privacyNote"></div>
 </div>
 
 <div class="panel no-print" id="boardPanel" hidden>
@@ -687,8 +675,6 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
       <h1>사주 명리 감정서<span class="hanja">四柱命理鑑定書</span></h1>
       <div class="head-meta">
         <div><b>감정일</b><input class="f" style="width:26mm;text-align:right" data-k="meta.date" placeholder="2026-07-30"></div>
-        <div><b>감정인</b><input class="f" style="width:26mm;text-align:right" data-k="meta.by" placeholder="상담사명"></div>
-        <div><b>관법</b><input class="f" style="width:26mm;text-align:right" data-k="meta.school" placeholder="자평 · 억부"></div>
       </div>
     </header>
 
@@ -701,8 +687,6 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
         <div class="cell"><span class="lbl">양력 생년월일</span><input class="f" data-k="c.solar" placeholder="1990-08-12"></div>
         <div class="cell"><span class="lbl">출생시각</span><input class="f" data-k="c.time" placeholder="10:40"></div>
         <div class="cell"><span class="lbl">음력</span><input class="f" data-k="c.lunar" placeholder="1990-06-22 (평)"></div>
-        <div class="cell"><span class="lbl">출생지</span><input class="f" data-k="c.place" placeholder="서울"></div>
-        <div class="cell"><span class="lbl">진태양시 보정</span><input class="f" data-k="c.tst" placeholder="-32분 적용"></div>
         <div class="cell"><span class="lbl">대운 방향 · 수</span><input class="f" data-k="c.daeundir" placeholder="순행 · 7세 대운"></div>
       </div>
     </div>
@@ -983,53 +967,23 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
         <div class="block">
           <div class="bh"><h3 id="yrThis">당해년</h3>
             <input class="f tagin" data-k="se.thisGz" placeholder="丙午 · 비견"></div>
-          <div class="prose"><textarea class="f" rows="4" data-k="se.thisTxt"
+          <div class="prose"><textarea class="f" rows="5" data-k="se.thisTxt"
             placeholder="올 한 해의 주제, 유리한 달과 조심할 달을 적습니다."></textarea></div>
         </div>
         <div class="block">
           <div class="bh"><h3 id="yrNext">익년</h3>
             <input class="f tagin" data-k="se.nextGz" placeholder="丁未 · 겁재"></div>
-          <div class="prose"><textarea class="f" rows="4" data-k="se.nextTxt"
+          <div class="prose"><textarea class="f" rows="5" data-k="se.nextTxt"
             placeholder="다음 해 흐름과 미리 준비할 일을 적습니다."></textarea></div>
         </div>
       </div>
     </div>
 
-    <!-- 14. 개운법 -->
-    <div class="sec">
-      <div class="sec-h"><h2>개운</h2><span class="hj">開運</span></div>
-      <div class="remedy">
-        <div class="rcell"><span class="k">보완 오행</span><input class="f" data-k="r.wx" placeholder="木 · 水"></div>
-        <div class="rcell"><span class="k">색</span><input class="f" data-k="r.color" placeholder="청록 · 남색"></div>
-        <div class="rcell"><span class="k">방위</span><input class="f" data-k="r.dir" placeholder="동 · 북"></div>
-        <div class="rcell"><span class="k">숫자</span><input class="f" data-k="r.num" placeholder="3 · 8"></div>
-        <div class="rcell"><span class="k">계절 · 시간</span><input class="f" data-k="r.time" placeholder="봄 · 새벽"></div>
-      </div>
-      <div class="prose" style="margin-top:3px">
-        <textarea class="f" rows="2" data-k="r.txt"
-          placeholder="일상에서 실천할 수 있는 구체적 행동으로 바꾸어 적습니다. (환경·습관·관계·공부 방향 등)"></textarea>
-      </div>
-    </div>
-
-    <!-- 15. 종합 제언 -->
+    <!-- 14. 종합 제언 -->
     <div class="sec">
       <div class="sec-h"><h2>종합 제언</h2><span class="hj">提言</span></div>
-      <div class="prose"><textarea class="f" rows="10" data-k="advice"
+      <div class="prose"><textarea class="f" rows="14" data-k="advice"
         placeholder="의뢰인이 가져갈 결론을 씁니다. 사주가 정한 것과 선택으로 바꿀 수 있는 것을 구분해 주면 상담의 만족도가 올라갑니다."></textarea></div>
-    </div>
-
-    <!-- 꼬리말 -->
-    <div class="signoff">
-      <div class="disc">
-        본 감정서는 사주 명리 이론에 근거한 상담 자료로, 의학·법률·투자 판단을 대신하지 않습니다.
-        해석은 관법과 감정인에 따라 달라질 수 있으며, 기재된 시기와 경향은 확정된 사실이 아니라
-        참고를 위한 것입니다. 최종 선택과 책임은 의뢰인에게 있습니다.
-        <div style="margin-top:3px">문의 · <input class="f" data-k="contact" style="width:52mm" placeholder="연락처 / 상담소명"></div>
-      </div>
-      <div class="seal-wrap">
-        <div class="seal-line"><span id="echoDate">—</span></div>
-        <div class="seal-line">감정인 <span id="echoBy">—</span></div>
-      </div>
     </div>
 
   </div>
@@ -1454,12 +1408,9 @@ function renderLuck(){
 
 function renderEchoes(){
   var name = (document.querySelector('[data-k="c.name"]').value || "").trim();
-  var by   = (document.querySelector('[data-k="meta.by"]').value || "").trim();
   var date = (document.querySelector('[data-k="meta.date"]').value || "").trim();
   document.getElementById("echoName").textContent  = name || "—";
   document.getElementById("echoName2").textContent = name || "—";
-  document.getElementById("echoBy").textContent    = by || "—";
-  document.getElementById("echoDate").textContent  = date || "—";
 
   var y = parseInt((date.match(/\d{4}/) || [])[0], 10);
   if(isFinite(y)){
@@ -1542,29 +1493,17 @@ mEdit.addEventListener("click", function(){ setMode(false); });
 mView.addEventListener("click", function(){ setMode(true); });
 
 /* ── 출생 정보 입력 ────────────────────────────────────────── */
-var PLACES = [
-  ["서울",126.978],["인천",126.705],["수원",127.029],["춘천",127.734],["강릉",128.896],
-  ["원주",127.946],["대전",127.385],["세종",127.289],["청주",127.489],["천안",127.114],
-  ["전주",127.148],["광주",126.851],["목포",126.392],["여수",127.662],["대구",128.601],
-  ["안동",128.729],["포항",129.365],["부산",129.075],["울산",129.311],["창원",128.681],
-  ["진주",128.104],["제주",126.531],["평양",125.754],["개성",126.556],["직접 입력",null]
-];
 var iName=g("iName"), iSex=g("iSex"), iDate=g("iDate"), iTime=g("iTime"),
-    iNoTime=g("iNoTime"), iPlace=g("iPlace"), iLon=g("iLon"),
-    iTst=g("iTst"), iJasi=g("iJasi"), calcOut=g("calcOut");
+    iNoTime=g("iNoTime"), iJasi=g("iJasi"), calcOut=g("calcOut");
 function g(id){ return document.getElementById(id); }
 
-iPlace.innerHTML = PLACES.map(function(p){
-  return '<option value="'+p[0]+'">'+p[0]+'</option>'; }).join("");
-iPlace.addEventListener("change", function(){
-  var p = PLACES.filter(function(x){ return x[0] === iPlace.value; })[0];
-  if(p && p[1] != null) iLon.value = p[1];
-  saveBirth();
-});
+// 시각은 서울 기준 경도 보정(진태양시)으로 계산한다
+var FIXED_LON = 126.978, FIXED_TST = "lon";
+
 iNoTime.addEventListener("change", function(){
   iTime.disabled = iNoTime.checked; saveBirth();
 });
-[iName,iSex,iDate,iTime,iLon,iTst,iJasi].forEach(function(el){
+[iName,iSex,iDate,iTime,iJasi].forEach(function(el){
   el.addEventListener("input", saveBirth);
   el.addEventListener("change", saveBirth);
 });
@@ -1576,16 +1515,14 @@ function saveBirth(){
 }
 function readBirth(){
   return { name:iName.value, sex:iSex.value, date:iDate.value, time:iTime.value,
-           noTime:iNoTime.checked, place:iPlace.value, lon:iLon.value,
-           tstMode:iTst.value, jasi:iJasi.value };
+           noTime:iNoTime.checked, jasi:iJasi.value };
 }
 function writeBirth(b){
   b = b || {};
   iName.value = b.name || ""; iSex.value = b.sex || "M";
   iDate.value = b.date || "";  iTime.value = b.time || "";
   iNoTime.checked = !!b.noTime; iTime.disabled = !!b.noTime;
-  iPlace.value = b.place || "서울"; iLon.value = b.lon || 126.978;
-  iTst.value = b.tstMode || "lon"; iJasi.value = b.jasi || "early";
+  iJasi.value = b.jasi || "early";
 }
 
 /* ── 자동 계산 ─────────────────────────────────────────────── */
@@ -1618,8 +1555,8 @@ function runCalc(){
 
   var input = {
     y:dparts[0], m:dparts[1], d:dparts[2], hour:tparts[0], min:tparts[1],
-    sex:iSex.value, lon:parseFloat(iLon.value) || 126.978,
-    tstMode:iTst.value, jasi:iJasi.value
+    sex:iSex.value, lon:FIXED_LON,
+    tstMode:FIXED_TST, jasi:iJasi.value
   };
   var a;
   try { a = Saju.analyze(input); }
@@ -1642,9 +1579,6 @@ function runCalc(){
     var L = Saju.lunarDate(input.y, input.m, input.d);
     setAuto("c.lunar", L.year + "-" + pad2(L.month) + "-" + pad2(L.day) + (L.leap ? " (윤)" : " (평)"));
   }catch(e){ setAuto("c.lunar", ""); }
-  setAuto("c.place", iPlace.value === "직접 입력" ? (input.lon + "°E") : iPlace.value);
-  setAuto("c.tst", iTst.value === "none" ? "보정 없음"
-        : (a.chart.tstMinutes >= 0 ? "+" : "") + a.chart.tstMinutes.toFixed(0) + "분 적용");
   setAuto("c.daeundir", (a.daeun.forward ? "순행" : "역행") + " · " + a.daeun.startAge + "세 대운");
   if(!document.querySelector('[data-k="meta.date"]').value)
     setAuto("meta.date", new Date().toISOString().slice(0,10));
@@ -1718,13 +1652,6 @@ function runCalc(){
                          Saju.JI_WX[Saju.JI.indexOf(yp.ji)], a.yongsin);
     setAuto("se."+pair[1]+"Gz", yp.gan + yp.ji + " · " + sg + " · " + lk);
   });
-
-  // 개운
-  setAuto("r.wx", a.remedy.wx);
-  setAuto("r.color", a.remedy.color);
-  setAuto("r.dir", a.remedy.dir);
-  setAuto("r.num", a.remedy.num);
-  setAuto("r.time", a.remedy.time);
 
   lastAnalysis = a; lastDraft = null;
   if (!g("boardPanel").hidden) renderBoard();
@@ -2118,13 +2045,7 @@ function hasPasscode(){
   catch(e){ return false; }
 }
 function renderLockBtn(){
-  var on = !!lockKey;
-  g("bLock").textContent = on ? "잠그기" : "잠금 설정";
-  g("privacyNote").innerHTML = on
-    ? '<b>잠금 켜짐.</b> 이 컴퓨터에 암호문으로만 저장되며, 암호 없이는 아무도 열 수 없습니다.'
-    : '자료는 <b>이 컴퓨터의 브라우저 안에만</b> 저장되고 밖으로 나가지 않습니다. ' +
-      '다른 컴퓨터에서 이 파일을 열어도 보이지 않습니다. ' +
-      '다만 <b>같은 컴퓨터를 같이 쓰는 사람에게는 보이니</b>, 필요하면 잠금을 거십시오.';
+  g("bLock").textContent = lockKey ? "잠그기" : "잠금 설정";
 }
 function showLockScreen(msg){
   lockErr.textContent = msg || "";

@@ -244,11 +244,13 @@ function findRelations(gans, jis){
   }
   for (i = 0; i < jis.length; i++) for (j = i+1; j < jis.length; j++){
     var x = jis[i], y = jis[j];
+    // 같은 짝이 순서만 달리 두 번 잡히지 않도록 지지 차례로 정규화한다
+    var xy = [x, y].sort(function(m, n){ return JI.indexOf(m) - JI.indexOf(n); }).join("");
     var yh = YUKHAP[x+y] || YUKHAP[y+x];
-    if (yh) push(x+y + " 육합" + yh);
-    if (inPairs(JI_CHUNG, x, y)) push(x+y + " 충");
-    if (inPairs(PA, x, y))  push(x+y + " 파");
-    if (inPairs(HAE, x, y)) push(x+y + " 해");
+    if (yh) push(xy + " 육합" + yh);
+    if (inPairs(JI_CHUNG, x, y)) push(xy + " 충");
+    if (inPairs(PA, x, y))  push(xy + " 파");
+    if (inPairs(HAE, x, y)) push(xy + " 해");
     if (x === y && JAHYEONG.indexOf(x) >= 0) push(x+y + " 자형");
   }
   SAMHYEONG.forEach(function(t){
