@@ -1717,7 +1717,9 @@ function renderBoard(){
     ["지지", POS4.map(function(k){ return '<span class="big' + wxCls(p[k].ji) + '">' + p[k].ji + '</span>'; })],
     ["지지 십성", POS4.map(function(k){ return '<span class="sm">' + a.sipseong.ji[k] + '</span>'; })],
     ["지장간", POS4.map(function(k){ return '<span class="sm">' + a.jijang[k] + '</span>'; })],
-    ["십이운성", POS4.map(function(k){ return '<span class="sm">' + a.unseong[k] + '</span>'; })]
+    ["십이운성", POS4.map(function(k){ return '<span class="sm">' + a.unseong[k] + '</span>'; })],
+    ["십이신살 (년지)", POS4.map(function(k){ return '<span class="sm">' + (a.sibiSinsal.yeon[k] || "―") + '</span>'; })],
+    ["십이신살 (일지)", POS4.map(function(k){ return '<span class="sm">' + (a.sibiSinsal.il[k] || "―") + '</span>'; })]
   ];
   H.push('<div class="bcard wide"><h4>사주 원국</h4><table class="btab"><tr><th></th>' +
     POSKO.map(function(t){ return "<th>" + t + "</th>"; }).join("") + "</tr>" +

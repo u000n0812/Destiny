@@ -227,12 +227,22 @@ function inPairs(list, a, b){
 function findRelations(gans, jis){
   var out = [], seen = {}, i, j;
   function push(s){ if (!seen[s]){ seen[s] = 1; out.push(s); } }
-  for (i = 0; i < gans.length; i++) for (j = i+1; j < gans.length; j++){
-    var a = gans[i], b = gans[j];
+  // 천간의 합·충은 바로 옆에 붙은 기둥끼리만 성립한다. 년간과 시간처럼 떨어진 자리는
+  // 만세력에서도 잡지 않는다. gans 는 [시, 일, 월, 년] 순이므로 뒤에서부터 짝지어
+  // 년→월, 월→일, 일→시 차례로 읽히게 만든다.
+  // 같은 두 글자가 두 자리에서 겹쳐 잡히면(쟁합) 만세력처럼 한 번만 적되,
+  // 일간이 낀 쪽을 남긴다.
+  var ganRel = {};
+  for (i = gans.length - 1; i > 0; i--){
+    var a = gans[i], b = gans[i-1];
+    var onIl = (i === 1 || i - 1 === 1);            // gans[1] 이 일간
+    var key = [a, b].sort(function(m, n){ return GAN.indexOf(m) - GAN.indexOf(n); }).join("");
     var hap = GAN_HAP[a+b] || GAN_HAP[b+a];
-    if (hap) push(a+b + " 합" + hap);
-    if (GAN_CHUNG.indexOf(a+b) >= 0 || GAN_CHUNG.indexOf(b+a) >= 0) push(a+b + " 충");
+    if (hap && (!ganRel["합"+key] || onIl)) ganRel["합"+key] = { text:a+b + " 합" + hap, il:onIl };
+    if ((GAN_CHUNG.indexOf(a+b) >= 0 || GAN_CHUNG.indexOf(b+a) >= 0) &&
+        (!ganRel["충"+key] || onIl)) ganRel["충"+key] = { text:a+b + " 충", il:onIl };
   }
+  Object.keys(ganRel).forEach(function(k){ push(ganRel[k].text); });
   for (i = 0; i < SAMHAP.length; i++){
     var s = SAMHAP[i], have = s.slice(0,3).filter(function(x){ return jis.indexOf(x) >= 0; });
     if (have.length === 3) push(s[0]+s[1]+s[2] + " 삼합" + s[3]);
@@ -292,33 +302,66 @@ var MUNCHANG = { "甲":"巳","乙":"午","丙":"申","戊":"申","丁":"酉","�
 var YANGIN   = { "甲":"卯","丙":"午","戊":"午","庚":"酉","壬":"子" };
 var GWAEGANG = ["庚辰","庚戌","壬辰","戊戌"];
 var BAEKHO   = ["甲辰","乙未","丙戌","丁丑","戊辰","壬戌","癸丑"];
+// 홍염살 — 일간 기준. 도화(삼합 기준)와는 뿌리가 다른 별개의 살이므로 따로 둔다.
+var HONGYEOM = { "甲":"午","乙":"午","丙":"寅","丁":"未","戊":"辰",
+                 "己":"辰","庚":"戌","辛":"酉","壬":"子","癸":"申" };
 function samhapOf(ji){
   for (var i = 0; i < SAMHAP.length; i++)
     if (SAMHAP[i].slice(0,3).indexOf(ji) >= 0) return SAMHAP[i];
   return null;
 }
+
+/* ── 십이신살 ─────────────────────────────────────────────
+   기준 지지가 속한 삼합의 고지(마지막 글자) 바로 다음 자리에서 겁살이 시작해
+   열두 지지를 차례로 돈다. 예) 일지 寅(寅午戌, 고지 戌) → 亥 겁살, 子 재살,
+   丑 천살, 寅 지살, 卯 연살, 辰 월살, 巳 망신살, 午 장성살, 未 반안살,
+   申 역마살, 酉 육해살, 戌 화개살.
+   이 배열에서 연살=도화, 역마살, 화개살이 각각 생지+1 · 생지+6 · 고지로 떨어진다. */
+var SIBI_SINSAL = ["겁살","재살","천살","지살","연살","월살",
+                   "망신살","장성살","반안살","역마살","육해살","화개살"];
+function sibiSinsal(base, ji){
+  var g = samhapOf(base); if (!g) return null;
+  var start = mod(JI.indexOf(g[2]) + 1, 12);        // 고지 다음 = 겁살
+  return SIBI_SINSAL[mod(JI.indexOf(ji) - start, 12)];
+}
+// 네 지지 각각에 대해 연지 기준·일지 기준 십이신살을 매긴다
+function twelveSinsal(p){
+  var keys = ["nyeon","wol","il","si"], out = { yeon:{}, il:{} };
+  keys.forEach(function(k){
+    out.yeon[k] = sibiSinsal(p.nyeon.ji, p[k].ji);
+    out.il[k]   = sibiSinsal(p.il.ji,    p[k].ji);
+  });
+  return out;
+}
+
 function findSinsal(p){
   var out = [], jis = [p.nyeon.ji, p.wol.ji, p.il.ji, p.si.ji], ilgan = p.il.gan;
   function add(s){ if (out.indexOf(s) < 0) out.push(s); }
+  // 도화(연살)·역마·화개는 연지 또는 일지가 속한 삼합에서만 나온다.
+  // 도화는 삼합 생지의 다음 글자다. 왕지 다음으로 잡으면 만세력과 어긋난다.
   [p.nyeon.ji, p.il.ji].forEach(function(base){
     var g = samhapOf(base); if (!g) return;
-    var dohwa  = JI[mod(JI.indexOf(g[1]) + 1, 12)];   // 왕지 다음
+    var dohwa  = JI[mod(JI.indexOf(g[0]) + 1, 12)];   // 생지 다음 = 연살
     var yeokma = JI[mod(JI.indexOf(g[0]) + 6, 12)];   // 생지의 충
     var hwagae = g[2];                                 // 고지
     if (jis.indexOf(dohwa)  >= 0) add("도화");
     if (jis.indexOf(yeokma) >= 0) add("역마");
     if (jis.indexOf(hwagae) >= 0) add("화개");
   });
+  if (jis.indexOf(HONGYEOM[ilgan]) >= 0) add("홍염");
   (CHEONEUL[ilgan] || []).forEach(function(j){ if (jis.indexOf(j) >= 0) add("천을귀인"); });
   if (jis.indexOf(MUNCHANG[ilgan]) >= 0) add("문창귀인");
   if (YANGIN[ilgan] && jis.indexOf(YANGIN[ilgan]) >= 0) add("양인");
+  // 괴강·백호는 간지 한 쌍으로 성립하므로 어느 기둥에 앉았는지가 곧 대상을 가른다.
+  // 년주 조부모 · 월주 부모 · 일주 본인과 배우자 · 시주 자녀.
+  var PKO = { nyeon:"년주", wol:"월주", il:"일주", si:"시주" };
   ["nyeon","wol","il","si"].forEach(function(k){
     var gz = p[k].gan + p[k].ji;
-    if (GWAEGANG.indexOf(gz) >= 0) add("괴강");
-    if (BAEKHO.indexOf(gz)   >= 0) add("백호");
+    if (GWAEGANG.indexOf(gz) >= 0) add("괴강 " + PKO[k]);
+    if (BAEKHO.indexOf(gz)   >= 0) add("백호 " + PKO[k]);
   });
   for (var i2 = 0; i2 < jis.length; i2++) for (var j2 = i2+1; j2 < jis.length; j2++){
-    var pr = [jis[i2], jis[j2]].sort().join("");
+    var pr = [jis[i2], jis[j2]].sort(function(a,b){ return JI.indexOf(a) - JI.indexOf(b); }).join("");
     if (inPairs(WONJIN, jis[i2], jis[j2])) add("원진 " + pr);
     if (inPairs(GWIMUN, jis[i2], jis[j2])) add("귀문 " + pr);
   }
@@ -329,13 +372,15 @@ function gongmang(dayIdx60){
   return [JI[base], JI[mod(base+1, 12)]];
 }
 
-/* ── 지지 세 그룹과 살 ───────────────────────────────────
-   寅申巳亥 생지 → 역마, 子午卯酉 왕지 → 도화·홍염, 辰戌丑未 고지 → 화개.
-   각 그룹을 둘씩 가르면 그대로 충하는 짝이 된다. */
+/* ── 지지 세 그룹의 성향 ─────────────────────────────────
+   寅申巳亥 생지는 역마의 기질, 子午卯酉 왕지는 도화·홍염의 기질,
+   辰戌丑未 고지는 화개의 기질을 띤다. 각 그룹을 둘씩 가르면 그대로 충하는 짝이 된다.
+   여기 적힌 이름은 그룹이 지닌 '기질'일 뿐 신살 판정이 아니다.
+   실제 도화·역마·화개·홍염 판정은 findSinsal 의 삼합·일간 기준을 따른다. */
 var JI_GROUP = [
-  { name:"생지", sal:["역마"],        members:["寅","申","巳","亥"] },
-  { name:"왕지", sal:["도화","홍염"], members:["子","午","卯","酉"] },
-  { name:"고지", sal:["화개"],        members:["辰","戌","丑","未"] }
+  { name:"생지", trait:["역마"],        members:["寅","申","巳","亥"] },
+  { name:"왕지", trait:["도화","홍염"], members:["子","午","卯","酉"] },
+  { name:"고지", trait:["화개"],        members:["辰","戌","丑","未"] }
 ];
 function groupOf(ji){
   for (var i = 0; i < JI_GROUP.length; i++)
@@ -370,7 +415,7 @@ function specials(p){
 
   // 네 지지가 어느 그룹에 몇 자씩 걸리는지
   var spread = JI_GROUP.map(function(gp){
-    return { name:gp.name, sal:gp.sal,
+    return { name:gp.name, trait:gp.trait,
              hits: jis.filter(function(j){ return gp.members.indexOf(j) >= 0; }) };
   });
 
@@ -717,14 +762,11 @@ function analyze(input){
 
   var sp = specials(p);
   sp.grades = prof.scores.map(gradeOf);
-  // 살 그룹에서 나온 것도 신살 목록에 반영한다
-  sp.spread.forEach(function(gp){
-    if (gp.hits.length) gp.sal.forEach(function(nm){ if (sinsal.indexOf(nm) < 0) sinsal.push(nm); });
-  });
 
   return {
     chart: chart, pillars: p, sex: input.sex, profile: prof, strength: str, johu: jh,
     gyeokguk: gg, yongsin: ys, daeun: du, sinsal: sinsal, gongmang: gm, special: sp,
+    sibiSinsal: twelveSinsal(p),
     relations: findRelations(gans, jis),
     remedy: {
       wx: WX_HANJA[ys.yong] + " · " + WX_HANJA[ys.hui],
@@ -761,6 +803,8 @@ return {
   computeChart:computeChart, analyze:analyze,
   sipseong:sipseong, sipseongOfJi:sipseongOfJi, unseong:unseong,
   findRelations:findRelations, findSinsal:findSinsal, gongmang:gongmang,
+  SIBI_SINSAL:SIBI_SINSAL, sibiSinsal:sibiSinsal, twelveSinsal:twelveSinsal,
+  HONGYEOM:HONGYEOM, CHEONEUL:CHEONEUL, BAEKHO:BAEKHO, GWAEGANG:GWAEGANG,
   lunarDate:lunarDate, yearPillar:yearPillar, luckOf:luckOf, REMEDY:REMEDY,
   JI_GROUP:JI_GROUP, groupOf:groupOf, gradeOf:gradeOf, specials:specials,
   interactWith:interactWith

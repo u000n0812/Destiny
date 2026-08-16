@@ -480,7 +480,7 @@ function generate(a, S){
   if (jobSal.length) 직업.push(jobSal.join(", ") + ".");
   if (sp.sal && sp.sal.same && sp.sal.il)
     직업.push("그 기운은 유난히 강하게 발현합니다. 일간을 받치는 일지·월지가 모두 " +
-      sp.sal.il.name + "(" + sp.sal.il.sal.join("·") + ") 그룹이기 때문입니다.");
+      sp.sal.il.name + "(" + sp.sal.il.trait.join("·") + " 기질) 그룹이기 때문입니다.");
   var hyeongRels = rels.filter(function(r){ return /형/.test(r) && !/자형/.test(r); });
   if (hyeongRels.length)
     직업.push("규율이 센 환경(법무·의료·세무·수사)에서 오히려 제 몫을 합니다. 지지에 " +
@@ -519,11 +519,13 @@ function generate(a, S){
   if (gmHit.length)
     제언.push(gmHit.map(function(k){ return posKo[k] + "지"; }).join("·") +
       " 자리의 글자는 힘을 반감해서 봅니다. 공망(" + a.gongmang.join("") + ")에 닿아 있기 때문입니다.");
+  // 괴강·백호는 앉은 기둥이 곧 대상이다 — 년주 조부모, 월주 부모, 일주 본인·배우자, 시주 자녀
+  var SAL_WHO = { "년주":"조부모 대", "월주":"부모 쪽", "일주":"본인과 배우자", "시주":"자녀 쪽" };
   var refSal = a.sinsal.filter(function(x){ return /백호|괴강|양인|원진|귀문/.test(x); });
   if (refSal.length)
     제언.push("참고로 " + refSal.map(function(x){
-      var base = x.split(" ")[0];
-      return x + "(" + (SINSAL_MEAN[base] || "") + ")";
+      var part = x.split(" "), base = part[0], who = SAL_WHO[part[1]];
+      return x + "(" + (who ? who + "에 걸린 " : "") + (SINSAL_MEAN[base] || "") + ")";
     }).join(", ") + " 기운이 보입니다. 다만 신살은 보조 지표일 뿐 위의 구조 판단을 뒤집지 않습니다.");
 
   /* ═ 세운 — 올해·내년 ═ */
