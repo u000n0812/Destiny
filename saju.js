@@ -216,6 +216,8 @@ var SAMHYEONG = [["寅","巳","申"],["丑","戌","未"]];
 var JAHYEONG = ["辰","午","酉","亥"];
 var PA  = [["子","酉"],["丑","辰"],["寅","亥"],["卯","午"],["巳","申"],["未","戌"]];
 var HAE = [["子","未"],["丑","午"],["寅","巳"],["卯","辰"],["申","亥"],["酉","戌"]];
+var WONJIN = [["子","未"],["丑","午"],["寅","酉"],["卯","申"],["辰","亥"],["巳","戌"]];
+var GWIMUN = [["子","酉"],["丑","午"],["寅","未"],["卯","申"],["辰","亥"],["巳","戌"]];
 function pk(a,b){ return [a,b].sort().join(""); }
 function inPairs(list, a, b){
   var k = pk(a,b);
@@ -258,6 +260,26 @@ function findRelations(gans, jis){
   return out;
 }
 
+// 새로 들어오는 글자(대운·세운)가 원국 여덟 자와 맺는 합충
+function interactWith(gan, ji, p){
+  var out = [], seen = {};
+  function push(x){ if (!seen[x]){ seen[x] = 1; out.push(x); } }
+  ["nyeon","wol","il","si"].forEach(function(k){
+    var g = p[k].gan, j = p[k].ji;
+    if (gan){
+      var h = GAN_HAP[gan+g] || GAN_HAP[g+gan];
+      if (h) push(gan + g + "합" + h);
+      if (GAN_CHUNG.indexOf(gan+g) >= 0 || GAN_CHUNG.indexOf(g+gan) >= 0) push(gan + g + "충");
+    }
+    if (ji){
+      var y = YUKHAP[ji+j] || YUKHAP[j+ji];
+      if (y) push(ji + j + "합" + y);
+      if (inPairs(JI_CHUNG, ji, j)) push(ji + j + "충");
+    }
+  });
+  return out;
+}
+
 /* ── 신살 ────────────────────────────────────────────────── */
 var CHEONEUL = { "甲":["丑","未"],"戊":["丑","未"],"庚":["丑","未"],
                  "乙":["子","申"],"己":["子","申"],
@@ -293,6 +315,11 @@ function findSinsal(p){
     if (GWAEGANG.indexOf(gz) >= 0) add("괴강");
     if (BAEKHO.indexOf(gz)   >= 0) add("백호");
   });
+  for (var i2 = 0; i2 < jis.length; i2++) for (var j2 = i2+1; j2 < jis.length; j2++){
+    var pr = [jis[i2], jis[j2]].sort().join("");
+    if (inPairs(WONJIN, jis[i2], jis[j2])) add("원진 " + pr);
+    if (inPairs(GWIMUN, jis[i2], jis[j2])) add("귀문 " + pr);
+  }
   return out;
 }
 function gongmang(dayIdx60){
@@ -493,8 +520,20 @@ function gyeokguk(p, ilganIdx){
 }
 
 /* ── 용신 ────────────────────────────────────────────────── */
-function yongsin(ilganIdx, str, scores, jh){
+function yongsin(ilganIdx, str, prof, jh){
+  var scores = prof.scores;
   var dw = GAN_WX[ilganIdx];
+  // 종격 — 일간을 돕는 비겁(자신 제외)·인성이 전혀 없으면 대세를 따른다
+  if (prof.sip.bigeop <= 1 && prof.sip.inseong === 0){
+    var dom = 0;
+    for (var d2 = 1; d2 < 5; d2++) if (scores[d2] > scores[dom]) dom = d2;
+    var hui2 = -1, gi2 = -1, gu2 = -1;
+    for (var h2 = 0; h2 < 5; h2++) if (SAENG[h2] === dom) hui2 = h2;
+    for (var g2 = 0; g2 < 5; g2++) if (GEUK[g2] === dom) gi2 = g2;
+    for (var u2 = 0; u2 < 5; u2++) if (SAENG[u2] === gi2) gu2 = u2;
+    return { yong:dom, hui:hui2, gi:gi2, gu:gu2, jong:true,
+             reason:"종격 · 대세 " + WX_HANJA[dom] + "를 따름" };
+  }
   var bigeop = dw, siksang = SAENG[dw], jaeseong = GEUK[dw], inseong = -1, gwanseong = -1;
   for (var w = 0; w < 5; w++){
     if (SAENG[w] === dw) inseong = w;
@@ -536,7 +575,7 @@ function yongsin(ilganIdx, str, scores, jh){
   for (var a = 0; a < 5; a++) if (SAENG[a] === pick) hui = a;
   for (var b = 0; b < 5; b++) if (GEUK[b]  === pick) gi  = b;
   for (var c2 = 0; c2 < 5; c2++) if (SAENG[c2] === gi) gu = c2;
-  return { yong: pick, hui: hui, gi: gi, gu: gu, reason: reason };
+  return { yong: pick, hui: hui, gi: gi, gu: gu, jong: false, reason: reason };
 }
 
 /* ── 대운 · 길흉 ─────────────────────────────────────────── */
@@ -664,7 +703,7 @@ function analyze(input){
   var str  = strength(p, ig);
   var jh   = johu(p, prof.scores);
   var gg   = gyeokguk(p, ig);
-  var ys   = yongsin(ig, str, prof.scores, jh);
+  var ys   = yongsin(ig, str, prof, jh);
   var du   = daeun(chart, input.sex, 8);
   du.list.forEach(function(r){
     r.luck = luckOf(GAN_WX[GAN.indexOf(r.gan)], JI_WX[JI.indexOf(r.ji)], ys);
@@ -721,6 +760,7 @@ return {
   sipseong:sipseong, sipseongOfJi:sipseongOfJi, unseong:unseong,
   findRelations:findRelations, findSinsal:findSinsal, gongmang:gongmang,
   lunarDate:lunarDate, yearPillar:yearPillar, luckOf:luckOf, REMEDY:REMEDY,
-  JI_GROUP:JI_GROUP, groupOf:groupOf, gradeOf:gradeOf, specials:specials
+  JI_GROUP:JI_GROUP, groupOf:groupOf, gradeOf:gradeOf, specials:specials,
+  interactWith:interactWith
 };
 });

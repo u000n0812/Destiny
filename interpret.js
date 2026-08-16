@@ -1,19 +1,19 @@
 /* ============================================================
    interpret.js — 객관적 해석 초안 생성기
 
-   같은 생년월일시면 언제나 같은 문장이 나온다. 대화 맥락이나 기분에
-   맞춰 달라지지 않는다는 뜻이며, 이것이 이 파일의 존재 이유다.
+   같은 생년월일시면 언제나 같은 문장이 나온다. 문장은 명식 구조에서
+   규칙으로 끌어내며, 규칙의 뼈대는 '혼자 시작하는 사주명리 공부'의
+   해석 순서를 따른다:
 
-   문장은 명식 구조에서 규칙으로 끌어내고, 각 문장에 근거를 붙인다.
-   근거의 우선순위는 아래와 같다.
+     일간 → 온도(조후)로 용신 후보 찾기 → 돕는/빼는 십신으로 신강약
+     → 신강이면 관·식·재, 신약이면 비겁·인성, 종격이면 대세 강화가
+       용신 후보 → 후보가 원국에 있는지, 지장간에 숨었는지,
+       운에서 오는지 확인 → 새로 오는 글자의 합충까지 반드시 본다
 
-     1순위  올려 주신 자료 5종        → 표시 [자료1]~[자료5]
-     2순위  추가로 찾은 참고자료      → 표시 [참고]
-     3순위  AI 프롬프트로 얻은 해석   → 이 파일에서 만들지 않는다.
-            프롬프트만 만들어 주고, 사람이 받아 온 답을 따로 붙인다.
-
-   1·2순위로 말할 수 있는 것을 먼저 다 말하고, 그래도 남는 자리를
-   3순위에 넘긴다. 순서를 뒤집지 않는다.
+   자료 우선순위(직접 정리 · 업로드 노트 → 참고자료 → AI)는 규칙을
+   고를 때만 쓰고, 출력 문장에는 출처를 표시하지 않는다.
+   같은 내용은 한 항목에서만 말한다 — 총평에서 말한 것은 아래에서
+   되풀이하지 않는다.
    ============================================================ */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
@@ -21,167 +21,109 @@
 })(typeof self !== "undefined" ? self : this, function () {
 "use strict";
 
-/* ── 근거 표시 ───────────────────────────────────────────── */
-var SRC = {
-  S0: { tag:"직접", name:"직접 알려 주신 정리",     rank:1 },
-  S1: { tag:"자료1", name:"사주명리 기초 강의 노트", rank:1 },
-  S2: { tag:"자료2", name:"음양오행·천간지지 노트", rank:1 },
-  S3: { tag:"자료3", name:"사주팔자와 운 노트",     rank:1 },
-  S4: { tag:"자료4", name:"풍수 인테리어 노트",     rank:1 },
-  S5: { tag:"자료5", name:"관상 노트",              rank:1 },
-  R1: { tag:"참고",  name:"십이운성 일반 해설",     rank:2 },
-  R2: { tag:"참고",  name:"명리 일반 통설",         rank:2 }
-};
+/* ── 오행 생극 (목화토금수 = 0~4) ────────────────────────── */
+var SAENG = [1, 2, 3, 4, 0];   // a가 생하는 오행
+var GEUK  = [2, 3, 4, 0, 1];   // a가 극하는 오행
 
-/* ── 1순위 · 올려 주신 자료에서 옮긴 규칙 ────────────────── */
-
-// 일간 열 가지 — [자료3]
+/* ── 일간 열 가지 ────────────────────────────────────────── */
 var ILGAN = {
-  "甲":{ img:"큰 나무", 강:"부러질지언정 굽히지 않고, 대담하며 이상이 큽니다. 활동적이고 건실하게 노력합니다.",
-         약:"겉으로 쾌활해 보여도 자존심이 강하고 무뚝뚝한 편이라 속내를 늦게 꺼냅니다." },
-  "乙":{ img:"풀과 꽃", 강:"변화에 예민하고 유연합니다. 바람이 불면 누웠다가 지나가면 다시 서는 끈기가 있습니다.",
-         약:"꾸준한 대신 스트레스를 많이 받고, 결단이 늦으며 비교에서 오는 질투가 생기기 쉽습니다." },
-  "丙":{ img:"한낮의 태양", 강:"통솔력과 지도력을 갖추고 재주가 많으며 임기응변에 능합니다.",
-         약:"감정에 휘둘려 실수하고, 솔직하고 단순해 비밀을 오래 담아 두지 못합니다. 한번 싫어지면 되돌리기 어렵습니다." },
-  "丁":{ img:"촛불", 강:"작은 불꽃이되 속이 깊고 예민하며, 서두르는 가운데서도 합리적입니다.",
-         약:"감성적이고 의존심이 있어 걱정하다 기회를 놓치는 국면이 반복됩니다." },
-  "戊":{ img:"넓은 벌판", 강:"신뢰와 신용을 중히 여기고 다른 기운을 품는 아량이 있습니다. 침착하고 꾸준합니다.",
-         약:"고집이 세고 움직임이 늦어, 결정을 미루는 사이 기회가 지나갑니다." },
-  "己":{ img:"텃밭", 강:"부지런하고 성실하며 사람을 잘 믿습니다. 이야기를 편하게 끌어냅니다.",
-         약:"본심을 잘 드러내지 않고 다소 보수적이라 속내를 털어놓기까지 시간이 걸립니다." },
-  "庚":{ img:"단단한 바위", 강:"선악 구별이 분명하고 의로우며 리더십이 있습니다. 약자를 돕고 강자에 맞섭니다.",
-         약:"아첨할 줄 몰라 억울하게 구설에 오르고, 표정이 굳어 차갑게 비칩니다." },
+  "甲":{ img:"큰 나무", 강:"부러질지언정 굽히지 않고, 대담하며 이상이 큽니다.",
+         약:"자존심이 강하고 무뚝뚝해 속내를 늦게 꺼냅니다." },
+  "乙":{ img:"풀과 꽃", 강:"변화에 예민하고 유연하며, 눕었다 다시 서는 끈기가 있습니다.",
+         약:"스트레스를 많이 받고 결단이 늦습니다." },
+  "丙":{ img:"한낮의 태양", 강:"통솔력이 있고 재주가 많으며 임기응변에 능합니다.",
+         약:"감정에 휘둘리기 쉽고, 한번 싫어지면 되돌리기 어렵습니다." },
+  "丁":{ img:"촛불", 강:"속이 깊고 예민하며 합리적입니다.",
+         약:"걱정하다 기회를 놓치는 국면이 반복됩니다." },
+  "戊":{ img:"넓은 벌판", 강:"신용을 중히 여기고 품이 넓으며 꾸준합니다.",
+         약:"고집이 세고 움직임이 늦습니다." },
+  "己":{ img:"텃밭", 강:"부지런하고 성실하며 사람을 잘 믿습니다.",
+         약:"본심을 잘 드러내지 않아 속을 여는 데 시간이 걸립니다." },
+  "庚":{ img:"단단한 바위", 강:"선악 구별이 분명하고 의로우며 리더십이 있습니다.",
+         약:"아첨할 줄 몰라 구설에 오르고 차갑게 비칩니다." },
   "辛":{ img:"보석", 강:"감성이 풍부하고 직감이 발달했으며 판단이 영리합니다.",
-         약:"성깔이 있어 한번 받은 상처가 오래가고, 관계가 한번 틀어지면 회복이 어렵습니다." },
-  "壬":{ img:"바다", 강:"지혜롭고 통찰이 있으며 변화를 즐깁니다. 여러 방면에 능한 팔방미인입니다.",
-         약:"두뇌 회전이 빠른 만큼 속을 알기 어렵다는 말을 듣고, 한곳에 머무는 일을 답답해합니다." },
-  "癸":{ img:"옹달샘", 강:"이치를 빨리 깨닫고 정확하게 처리합니다. 성격이 치밀하고 안정을 추구합니다.",
-         약:"남의 부탁을 거절하지 못하고, 거절하고 나서도 속이 불편합니다." }
+         약:"한번 받은 상처가 오래가고, 틀어진 관계는 회복이 어렵습니다." },
+  "壬":{ img:"바다", 강:"지혜롭고 통찰이 있으며 여러 방면에 능합니다.",
+         약:"속을 알기 어렵다는 말을 듣고, 머무는 일을 답답해합니다." },
+  "癸":{ img:"옹달샘", 강:"이치를 빨리 깨닫고 치밀하며 안정을 추구합니다.",
+         약:"부탁을 거절하지 못하고 속으로 불편해합니다." }
 };
-
-// 십성 열 가지 — [자료3] 주 · [자료1] 보완
-var SIP = {
-  "비견":{ key:"자존심 · 독립", 강:"스스로 판단하고 밀고 나갑니다. 대인관계를 주관합니다.",
-           약:"지시받는 것을 싫어하고, 일이 안 풀리면 자존감이 급격히 떨어집니다.",
-           조언:"장기적으로 독보적인 자리에 서는 일을 준비하는 편이 낫습니다." },
-  "겁재":{ key:"경쟁 · 승부욕", 강:"지고 못 사는 기질에서 도전 의식이 나옵니다.",
-           약:"고독하고 남의 시선에 좌절이 큽니다. 사업을 크게 벌이다 실패할 소지가 있습니다.",
-           조언:"작은 성공을 여러 번 체험하고, 싸우지 않고 이기는 길도 있음을 익히십시오." },
-  "식신":{ key:"연구 · 몰입", 강:"하나를 파고들면 끝을 봅니다. 원리 원칙을 지키고 조용히 자기 일을 합니다.",
-           약:"변화를 좋아하지 않아 지나치면 행동이 멎고, 인간관계가 다소 부족할 수 있습니다.",
-           조언:"의식주와 언어를 주관하니 말과 먹는 것으로 먹고사는 일이 어울립니다." },
-  "상관":{ key:"표현 · 사교", 강:"감정과 의견을 잘 드러내고 사교적입니다.",
-           약:"충동적이고 과시가 있으며 시원한 말이 남에게 상처가 됩니다. 직장의 경직된 구조를 답답해합니다.",
-           조언:"큰 변화를 스스로 만들어 굴곡을 자초하지 않도록 말을 한 박자 늦추십시오." },
-  "편재":{ key:"큰돈 · 활동", 강:"손재주가 있고 활동적이며 사업가적 감각이 있습니다. 미래지향적입니다.",
-           약:"작은 돈에 관심이 없어 월급에 만족하기 어렵고, 낭비와 한 방을 노리는 마음이 있습니다.",
-           조언:"비정기적인 큰돈을 다루는 자리이니 들어온 돈을 묶어 두는 장치를 먼저 만드십시오." },
-  "정재":{ key:"꼼꼼함 · 안정", 강:"계산이 치밀하고 알뜰하며 안정감이 있습니다. 믿음을 주면 배신하지 않습니다.",
-           약:"인색하고 집착이 있으며 감정이 예민해 상대를 답답하게 만들 수 있습니다.",
-           조언:"고정수입을 지키는 힘이 강점이니 위험한 확장보다 축적으로 가십시오." },
-  "편관":{ key:"명예 · 인내", 강:"봉사와 희생 정신이 있고 인내심이 좋으며 솔선수범합니다. 버티는 데 일가견이 있습니다.",
-           약:"내면 스트레스가 크고 반항적이며 고집이 셉니다. 남을 세우느라 자기 기력이 쇠합니다.",
-           조언:"한계를 넘는 목표를 이뤄야 만족하는 구조이니, 목표의 크기보다 회복의 주기를 관리하십시오." },
-  "정관":{ key:"합리 · 명예욕", 강:"준법정신이 강하고 정직하며 대의명분을 지킵니다.",
-           약:"우유부단하고 남의 눈을 의식해 체면치레로 실속을 놓칠 수 있습니다.",
-           조언:"규칙이 분명한 조직에서 강점이 살아납니다." },
-  "편인":{ key:"특수한 배움", 강:"남이 잘 가지 않는 분야의 전문성과 장인 기질이 있습니다.",
-           약:"친절한 도움이라기보다 까칠한 도움이라 배움이 곧바로 성과로 이어지지 않습니다.",
-           조언:"특수 자격이나 독자 영역으로 자리를 잡는 편이 유리합니다." },
-  "정인":{ key:"보편적 도움", 강:"잘 알려진 공부와 자격, 문서의 도움을 받습니다. 여유와 너그러움이 있습니다.",
-           약:"지나치면 게으름으로 바뀌어 배우기만 하고 실행이 늦어집니다.",
-           조언:"배운 것을 밖으로 내보내는 통로를 함께 두십시오." }
-};
-
-// 오행 다섯 — [자료2] 주 · [자료1] 보완
-var WX_TRAIT = [
-  { 많:"수직으로 뻗는 기운이 강해 미래지향적이고 의욕이 큽니다. 고집도 함께 셉니다. 교육·제조·기획처럼 만들어 내는 일과 인연합니다.",
-    없:"뻗어 나가는 힘과 시작하는 의욕이 약해, 판을 새로 짜는 일보다 있는 판을 다듬는 일이 편합니다." },
-  { 많:"드러내고 펼치는 기운이 강합니다. 말을 잘하고 상상력이 풍부하나 성질이 급합니다.",
-    없:"자기를 알리고 드러내는 데 서툴러 한 일에 비해 덜 알려지기 쉽고, 시작한 일의 마무리에 힘이 빠집니다." },
-  { 많:"중간에서 조절하는 힘이 있어 남의 말을 잘 듣습니다. 다만 지나치면 판단이 둔해집니다.",
-    없:"중심을 잡아 주는 기운이 얇아 결정이 흔들리고, 완충 없이 감정이 바로 부딪힙니다." },
-  { 많:"냉정하고 실리를 따집니다. 내 것과 남의 것을 분명히 가르되 공적인 의리는 지킵니다.",
-    없:"끊고 맺는 힘과 결단이 약해, 정리해야 할 관계와 일을 오래 끌고 갑니다." },
-  { 많:"인내와 지구력이 있고 정신적인 세계에 관심이 많습니다. 지혜와 임기응변이 좋으며 과감합니다.",
-    없:"쉬어 가는 자리와 유연함이 부족해 한번 달아오르면 식힐 곳이 없습니다." }
-];
-
-// 주(柱)별 자리 의미 — [자료2]
-var PILLAR_MEAN = {
-  nyeon:{ ko:"년주", 뜻:"조상·나라·명예이자 초년(0~15세)" },
-  wol:  { ko:"월주", 뜻:"가정·부모·정신·문서이자 청년기(15~30세)" },
-  il:   { ko:"일주", 뜻:"나 자신이자 배우자 자리, 장년기(30~45세)" },
-  si:   { ko:"시주", 뜻:"자식·사회·미래·건강이자 말년(45~60세)" }
-};
-
-// 대운 오행운 — [자료2]
-var DAEUN_WX = ["창조하고 만들어 내는 일", "알리고 드러내는 일", "중재하고 쌓아 두는 일",
-                "내실을 다지는 일(전자·금융·법무·기계)", "보이지 않는 것을 좇는 일(연구·종교·철학)"];
-
-/* ── 1순위 · 직접 알려 주신 정리 ─────────────────────────── */
-
-// 오행 점수가 높을 때 — [직접]
-var WX_HIGH = [
-  { 강:"성장욕이 있고 진취적입니다. 주변 사람을 기분 좋게 하고 순발력이 좋으며 망설임이 없습니다.",
-    주의:"천진난만해 눈치가 없을 수 있고, 일을 벌여 놓고 수습을 못하기도 하며 현실 감각이 떨어질 수 있습니다." },
-  { 강:"정의감이 있고 성격이 시원해 대인관계가 좋습니다. 자기 매력을 어필하는 데 능합니다.",
-    주의:"감정선이 크게 흔들릴 수 있어 타협이 필요합니다." },
-  { 강:"공격적이지도 방어적이지도 않게 있는 그대로 받아들입니다. 끈기가 있어 나이가 들며 빛을 보고, 한번 시작하면 끝을 보려 해 중도에 잘 포기하지 않습니다. 묘한 분위기가 있어 이미지가 좋은 경우가 많습니다.",
-    주의:"안으로 파고드는 것은 잘하는데 자기 어필을 못하는 편이니, 일단 시작해 보는 것이 중요합니다." },
-  { 강:"성격이 칼 같고 두루뭉술한 표현을 싫어합니다. 법·의료·경찰처럼 분명한 일이 어울립니다.",
-    주의:"내향적인 경우가 많아 사람 다루는 법을 배울 필요가 있습니다. 한순간의 실수로 남을 다치게 할 수 있으니 화를 다스리고, 자기계발과 취미로 감정을 풀어야 합니다." },
-  { 강:"생각이 깊고 예술가적 기질이 있습니다.",
-    주의:"고민이 많고 우울감을 잘 느끼니 현실성을 따로 챙겨야 합니다." }
-];
-// 점수 등급을 어떻게 다룰 것인가 — [직접]
-var GRADE_ADVICE = {
-  "과다":"과다는 그 기운을 다루는 연습이 필요합니다. 잘 다듬으면 오히려 극장점이 됩니다.",
-  "발달":"발달은 장점이니 이것을 어떻게 드러낼지를 생각하십시오.",
-  "미약":"미약은 어떻게 보완할지를 생각해야 합니다."
-};
-// 일간 · 일지에 대해 따로 알려 주신 것 — [직접]
+// 따로 알려 주신 일간 · 일지
 var ILGAN_ADD = {
-  "丙":"태양입니다. 외향적이고 사람들과 잘 섞이며 인간성이라는 말을 중요하게 여깁니다. 남에게 자기를 드러내는 일을 하면 좋습니다."
+  "丙":"외향적이고 사람들과 잘 섞이며, 자기를 드러내는 일이 맞습니다."
 };
 var ILJI_ADD = {
-  "申":"완벽주의 기질이 있습니다. 모방에 능하고 잡기가 많아 잘하는 것들을 하나로 잇는 일이 중요합니다. 논리와 데이터에 강하고, 학문보다 기술과 재능으로 성공하는 경우가 많습니다. 역마 기질이 강하며 사람에 대한 회의가 들 때가 있습니다."
+  "申":"완벽주의에 모방과 잡기가 능해 잘하는 것들을 하나로 잇는 일이 중요하고, 논리와 데이터에 강해 학문보다 기술·재능으로 성공하는 경우가 많습니다."
 };
-// 계절 — 일간의 오행 계절과 월지의 계절을 견주기 위한 표 [직접]
-var WX_SEASON = ["봄","여름","환절기","가을","겨울"];
-function jiSeason(ji){
-  if ("寅卯辰".indexOf(ji) >= 0) return "봄";
-  if ("巳午未".indexOf(ji) >= 0) return "여름";
-  if ("申酉戌".indexOf(ji) >= 0) return "가을";
-  if ("亥子丑".indexOf(ji) >= 0) return "겨울";
-  return "";
-}
 
-/* ── 2순위 · 추가 참고자료 ───────────────────────────────── */
-var UNSEONG_NOTE = {   // [참고] 십이운성 일반 해설
-  "장생":"기운이 새로 돋는 자리", "목욕":"아직 다듬어지지 않은 자리", "관대":"틀을 갖추는 자리",
-  "건록":"제 몫을 하는 자리",     "제왕":"기운이 절정인 자리",       "쇠":"한풀 꺾이는 자리",
-  "병":"힘이 무른 자리",         "사":"움직임이 멎는 자리",         "묘":"갈무리하는 자리",
-  "절":"끊어졌다 다시 시작하는 자리","태":"싹이 맺히는 자리",        "양":"길러지는 자리"
+/* ── 십성 열 가지 ────────────────────────────────────────── */
+var SIP = {
+  "비견":{ key:"자존심 · 독립", 강:"스스로 판단하고 밀고 나갑니다.",
+           약:"지시받기를 싫어하고, 일이 막히면 자존감이 급락합니다." },
+  "겁재":{ key:"경쟁 · 승부욕", 강:"지고 못 사는 기질에서 도전 의식이 나옵니다.",
+           약:"크게 벌이다 실패할 소지가 있어 작은 성공을 쌓는 편이 낫습니다." },
+  "식신":{ key:"연구 · 몰입", 강:"하나를 파고들면 끝을 봅니다.",
+           약:"변화를 꺼려 지나치면 움직임이 멎습니다." },
+  "상관":{ key:"표현 · 사교", 강:"감정과 의견을 잘 드러내고 사교적입니다.",
+           약:"시원한 말이 남에게 상처가 되고, 경직된 조직을 답답해합니다." },
+  "편재":{ key:"큰돈 · 활동", 강:"활동적이고 사업가적 감각이 있습니다.",
+           약:"작은 돈에 관심이 없어 월급에 만족하기 어렵습니다." },
+  "정재":{ key:"꼼꼼함 · 안정", 강:"치밀하고 알뜰하며 안정감이 있습니다.",
+           약:"집착이 생기면 상대를 답답하게 만듭니다." },
+  "편관":{ key:"명예 · 인내", 강:"버티는 데 일가견이 있고 솔선수범합니다.",
+           약:"속으로 스트레스가 크고 기력을 소모합니다." },
+  "정관":{ key:"합리 · 명예욕", 강:"준법정신이 강하고 정직합니다.",
+           약:"남의 눈을 의식해 실속을 놓칠 수 있습니다." },
+  "편인":{ key:"특수한 배움", 강:"남이 안 가는 분야의 전문성과 장인 기질이 있습니다.",
+           약:"배움이 곧바로 성과로 이어지지는 않습니다." },
+  "정인":{ key:"보편적 배움", 강:"공부·자격·문서의 도움을 받고 너그럽습니다.",
+           약:"지나치면 배우기만 하고 실행이 늦어집니다." }
 };
-var ORGAN = ["간·담과 근골", "심장과 순환기", "비위와 소화기", "폐와 호흡기·대장", "신장과 방광"];
+var MISS_MEAN = { "비겁":"홀로 버티는 힘", "식상":"표현하고 만들어 내는 힘",
+                  "재성":"돈을 붙드는 힘", "관성":"조직과 규율을 견디는 힘",
+                  "인성":"뒤를 받쳐 주는 힘" };
+
+/* ── 오행 점수 등급별 성정 ───────────────────────────────── */
+var WX_HIGH = [
+  { 강:"성장욕이 있고 진취적이며 순발력이 좋고 망설임이 없습니다.",
+    주의:"일을 벌여 놓고 수습이 안 되거나 현실 감각이 무뎌질 수 있습니다." },
+  { 강:"정의감이 있고 시원시원해 대인관계가 좋으며 자기 매력을 잘 드러냅니다.",
+    주의:"감정선이 크게 흔들리니 타협이 필요합니다." },
+  { 강:"있는 그대로 받아들이는 끈기가 있어 한번 시작하면 끝을 보고, 나이 들며 빛을 봅니다.",
+    주의:"자기 어필이 서툴러, 일단 시작해 보는 것이 중요합니다." },
+  { 강:"성격이 칼 같고 분명해 법·의료·경찰처럼 확실한 일이 어울립니다.",
+    주의:"말과 행동이 남에게 상처가 될 수 있으니 화를 다스리고 취미로 감정을 풀어야 합니다." },
+  { 강:"생각이 깊고 예술가적 기질이 있습니다.",
+    주의:"고민과 우울감이 잦으니 현실성을 따로 챙겨야 합니다." }
+];
+var WX_LOW = [
+  "시작하고 뻗는 힘이 약해 판을 새로 짜기보다 다듬는 일이 편합니다",
+  "자기를 드러내는 데 서툴러 한 일에 비해 덜 알려지기 쉽습니다",
+  "중심을 잡는 완충이 얇아 감정이 바로 부딪히기 쉽습니다",
+  "끊고 맺는 결단이 약해 정리할 일을 오래 끌고 갑니다",
+  "식히고 쉬는 유연함이 부족해 달아오르면 식힐 곳이 없습니다"
+];
+var ORGAN = ["간·담과 근골", "심장과 순환기", "비위와 소화기", "폐·호흡기와 대장", "신장과 방광"];
+
+/* ── 십이운성 ────────────────────────────────────────────── */
+var UNSEONG_NOTE = {
+  "장생":"기운이 새로 돋는 자리", "목욕":"아직 다듬어지지 않은 자리", "관대":"틀을 갖추는 자리",
+  "건록":"제 몫을 하는 자리",     "제왕":"기운이 절정인 자리",       "쇠":"한풀 꺾여 다지는 자리",
+  "병":"힘이 무른 자리",         "사":"움직임이 멎는 자리",         "묘":"갈무리하는 자리",
+  "절":"끊었다 다시 시작하는 자리","태":"싹이 맺히는 자리",          "양":"길러지는 자리"
+};
+
+/* ── 프롬프트용 자리 이름 ────────────────────────────────── */
+var PILLAR_MEAN = {
+  nyeon:{ ko:"년주" }, wol:{ ko:"월주" }, il:{ ko:"일주" }, si:{ ko:"시주" }
+};
 
 /* ── 도우미 ──────────────────────────────────────────────── */
-// 한글 받침에 따라 조사를 고른다 (금이 / 화가)
 function jong(ko){
   var c = ko.charCodeAt(ko.length - 1) - 0xAC00;
   return (c >= 0 && c <= 11171) && (c % 28) !== 0;
 }
 function J(ko, withJong, without){ return jong(ko) ? withJong : without; }
-
-function cite(){
-  var t = [];
-  for (var i = 0; i < arguments.length; i++){
-    var s = SRC[arguments[i]];
-    if (s && t.indexOf(s.tag) < 0) t.push(s.tag);
-  }
-  return " [" + t.join("·") + "]";
-}
 function countSip(sipseong){
   var c = {};
   ["si","il","wol","nyeon"].forEach(function(p){
@@ -191,230 +133,348 @@ function countSip(sipseong){
   });
   return c;
 }
-// 지면에 맞춰 뒤 문장부터 덜어 낸다. 앞쪽일수록 구조적으로 중요한 문장이다.
-function fit(parts, max){
-  var out = parts.slice();
-  while (out.length > 2 && out.join(" ").length > max) out.pop();
-  return out.join(" ");
-}
 function topSip(counts){
   var best = null, n = 0;
   Object.keys(counts).sort().forEach(function(k){ if (counts[k] > n){ n = counts[k]; best = k; } });
   return best ? { name:best, n:n } : null;
 }
+// 지면에 맞춰 뒤 문장부터 덜어 낸다 — 앞쪽일수록 구조적으로 중요한 문장
+function fit(parts, max){
+  var out = parts.filter(Boolean);
+  while (out.length > 2 && out.join(" ").length > max) out.pop();
+  return out.join(" ");
+}
+function ranges(list){
+  return list.map(function(r){ return r.from + "~" + r.to + "세"; }).join(", ");
+}
 
 /* ── 생성기 ──────────────────────────────────────────────── */
 function generate(a, S){
-  var p = a.pillars, W = S.WX_HANJA, WK = S.WX_KO;
+  var p = a.pillars, W = S.WX_HANJA, WK = S.WX_KO, GAN = S.GAN, JI = S.JI;
   var ilgan = p.il.gan, IG = ILGAN[ilgan];
+  var dw = S.GAN_WX[GAN.indexOf(ilgan)];
   var st = a.strength, ys = a.yongsin, sc = a.profile.scores, cnt = a.profile.counts;
   var sipCount = countSip(a.sipseong), top = topSip(sipCount);
-  var used = {};
-  function u(){ for (var i = 0; i < arguments.length; i++) used[arguments[i]] = 1; return cite.apply(null, arguments); }
-  function wx(i){ return W[i] + "(" + WK[i] + ")"; }
-
-  var many = [], none = [], i;
-  for (i = 0; i < 5; i++){
-    if (sc[i] >= 40) many.push(i);
-    if (cnt[i] === 0) none.push(i);
+  var sp = a.special || {}, gr = sp.grades || [];
+  var rels = a.relations || [];
+  var pos = ["nyeon","wol","il","si"], posKo = { nyeon:"년", wol:"월", il:"일", si:"시" };
+  var i;
+  function wx(n){ return W[n] + "(" + WK[n] + ")"; }
+  function wxOf(ch){
+    var g = GAN.indexOf(ch); if (g >= 0) return S.GAN_WX[g];
+    var j = JI.indexOf(ch); return j >= 0 ? S.JI_WX[j] : -1;
+  }
+  function koOf(ch){
+    var g = GAN.indexOf(ch); if (g >= 0) return S.GAN_KO[g];
+    var j = JI.indexOf(ch); return j >= 0 ? S.JI_KO[j] : ch;
   }
   var bg   = (sipCount["비견"]||0) + (sipCount["겁재"]||0);
   var gwan = (sipCount["정관"]||0) + (sipCount["편관"]||0);
   var jj   = sipCount["정재"]||0, pj = sipCount["편재"]||0, jae = jj + pj;
   var sik  = (sipCount["식신"]||0) + (sipCount["상관"]||0);
+  var inS  = (sipCount["정인"]||0) + (sipCount["편인"]||0);
+  var gwanWx = -1, inWx = -1;
+  for (i = 0; i < 5; i++){ if (GEUK[i] === dw) gwanWx = i; if (SAENG[i] === dw) inWx = i; }
+  var thisYear = new Date().getFullYear();
+  var birthYear = a.chart.tst.y;
 
-  /* 총평 */
+  /* ═ 총평 — 일간 → 온도 → 신강약과 용신 후보 → 용신 소재와 합충 ═ */
   var 총평 = [];
-  총평.push("일간이 " + ilgan + WK[S.GAN_WX[S.GAN.indexOf(ilgan)]] + ", 곧 " + IG.img +
-    "에 해당합니다. " + IG.강 + u("S3"));
-  총평.push("여덟 자를 자리별 무게로 견주면 나를 돕는 기운이 " + st.pct + "퍼센트로 " + st.label +
-    "에 해당하고, 월지 " + p.wol.ji + "에서 계절의 도움을 " +
-    (st.deukRyeong ? "받습니다" : "받지 못합니다") +
-    ". 월지가 무엇을 차지하느냐에 따라 사주의 판도가 갈립니다." + u("S2","S1"));
-  // 점수 등급 — 20 미만 미약, 25~45 발달, 50 이상 과다 [직접]
-  var sp = a.special || {};
-  var gr = sp.grades || [];
-  var strong = [], weakest = [];
-  for (i = 0; i < 5; i++){
-    if (gr[i] === "과다" || gr[i] === "발달~과다") strong.push(i);
-    if (gr[i] === "미약") weakest.push(i);
-  }
-  총평.push("오행 점수는 " + WK.map(function(k, n){ return k + sc[n]; }).join(" ") +
-    "입니다. " + WK.map(function(k, n){ return k + " " + gr[n]; }).join(", ") +
-    "입니다." + u("S0"));
-  if (strong.length){
-    var s0 = strong[0];
-    총평.push(wx(s0) + J(WK[s0], "이", "가") + " " + gr[s0] + "합니다. " + WX_HIGH[s0].강 +
-      " 다만 " + WX_HIGH[s0].주의 + u("S0"));
-    총평.push(GRADE_ADVICE[gr[s0] === "발달" ? "발달" : "과다"] + u("S0"));
-  }
-  if (weakest.length)
-    총평.push("반대로 " + weakest.map(wx).join("·") + J(WK[weakest[weakest.length-1]], "이", "가") +
-      " 미약합니다. " + WX_TRAIT[weakest[0]].없 + " " + GRADE_ADVICE["미약"] + u("S0","S2"));
-  if (sp.yangEight)
-    총평.push("여덟 자가 모두 양인 양팔통입니다. 한쪽으로 온전히 쏠린 구조라 드러내고 밀고 나가는 힘이 크되, 거두어들이는 자리가 없습니다." + u("S0"));
-  if (sp.yinEight)
-    총평.push("여덟 자가 모두 음인 음팔통입니다. 안으로 거두는 힘이 크되, 밖으로 펼쳐 내는 자리가 없습니다." + u("S0"));
+  총평.push("일간은 " + ilgan + WK[dw] + ", " + IG.img + "입니다.");
 
-  /* 기질 키워드 */
+  var wj = p.wol.ji;
+  var winter = "亥子丑".indexOf(wj) >= 0, summer = "巳午未".indexOf(wj) >= 0;
+  if (a.johu.need != null){
+    총평.push((winter ? "한겨울" : "한여름") + "(" + wj + "월)에 태어났는데 " +
+      wx(a.johu.need) + J(WK[a.johu.need], "이", "가") + " 모자라 팔자가 " +
+      (winter ? "차갑습니다" : "뜨겁습니다") + ". 온도부터 맞춰야 하는 명식이라 " +
+      W[a.johu.need] + J(WK[a.johu.need], "이", "가") + " 첫 용신 후보가 되고, " +
+      (cnt[a.johu.need] === 0 ? "그 글자가 원국에 하나도 없어 건강과 기력부터 지켜야 합니다."
+                              : "다행히 그 글자가 원국에 있어 숨통은 트여 있습니다."));
+  } else if (winter || summer){
+    총평.push((winter ? "겨울" : "여름") + "생이지만 " + (winter ? "불" : "물") +
+      " 기운이 받쳐 주어 온도는 견딜 만합니다.");
+  }
+
+  if (ys.jong){
+    총평.push("일간을 돕는 비겁·인성이 원국에 없어 종격으로 봅니다. 홀로 버티는 팔자가 아니라 대세를 타는 팔자이므로, 가장 강한 " +
+      wx(ys.yong) + "를 거스르지 않고 북돋우는 것이 용신이며, 오히려 비겁·인성 운이 오면 마음만 흔들립니다.");
+  } else {
+    총평.push("일간을 돕는 기운(비겁·인성)이 " + st.pct + "%로 " + st.label + "입니다. " +
+      (st.strong ? "힘을 덜어 내는 관성·식상·재성이 용신 후보이고"
+       : st.weak ? "힘을 보태는 비견·겁재·정인·편인이 용신 후보이고"
+                 : "크게 기울지 않아 모자란 쪽을 채우는 글자가 용신 후보이고") +
+      ", 이 명식은 " + wx(ys.yong) + J(WK[ys.yong], "을", "를") + " 용신, " +
+      W[ys.hui] + J(WK[ys.hui], "을", "를") + " 희신으로 잡습니다." +
+      (bg >= 3 && !st.strong ? " 다만 비겁이 이미 여럿 모여 있어 비겁은 용신 순위에서 뒤로 미룹니다." : ""));
+  }
+
+  // 용신 소재 — 원국 → 지장간 → 대운, 그리고 들어올 때의 합충
+  var yong = ys.yong, loc;
+  if (cnt[yong] > 0){
+    loc = "용신 " + W[yong] + J(WK[yong], "은", "는") + " 원국에 " + cnt[yong] + "자 있어 바로 쓸 수 있습니다.";
+  } else {
+    var hid = [];
+    pos.forEach(function(k){
+      (S.JIJANG[p[k].ji] || []).forEach(function(x){
+        if (S.GAN_WX[GAN.indexOf(x[0])] === yong) hid.push(posKo[k] + "지 " + p[k].ji + " 속 " + x[0]);
+      });
+    });
+    if (hid.length){
+      loc = "용신 " + W[yong] + J(WK[yong], "은", "는") + " 겉글자에 없고 " + hid[0] +
+        "에 숨어 있어, 그 기운을 깨우는 운이 와야 힘을 씁니다.";
+    } else {
+      var duY = null;
+      for (i = 0; i < a.daeun.list.length; i++){
+        var r0 = a.daeun.list[i];
+        if (S.GAN_WX[GAN.indexOf(r0.gan)] === yong || S.JI_WX[JI.indexOf(r0.ji)] === yong){ duY = r0; break; }
+      }
+      if (duY){
+        var inter = S.interactWith(duY.gan, duY.ji, p);
+        loc = "용신 " + W[yong] + J(WK[yong], "은", "는") + " 원국에도 지장간에도 없어 운에서 와야 합니다. " +
+          duY.from + "~" + duY.to + "세 " + duY.gan + duY.ji + " 대운에서 들어오는데, " +
+          (inter.length ? "이때 원국과 " + inter.slice(0,2).join("·") + " 관계가 걸려 온전히 쓰이는지 살펴야 합니다."
+                        : "원국과 큰 합충 없이 들어와 그대로 쓸 수 있습니다.");
+      } else {
+        loc = "용신 " + W[yong] + J(WK[yong], "은", "는") + " 원국·지장간·대운 어디에도 뚜렷하지 않아 해마다 오는 세운에 기대야 합니다.";
+      }
+    }
+  }
+  총평.push(loc);
+
+  /* ═ 기질 — 오행 점수 등급 + 십성 분포 ═ */
+  var 기질 = [];
+  var over = -1, lows = [];
+  for (i = 0; i < 5; i++){
+    if ((gr[i] === "과다" || gr[i] === "발달~과다") && (over < 0 || sc[i] > sc[over])) over = i;
+    if (gr[i] === "미약") lows.push(i);
+  }
+  기질.push("오행 점수는 " + WK.map(function(k, n){ return k + sc[n]; }).join(" ") + "입니다.");
+  if (over >= 0)
+    기질.push(wx(over) + J(WK[over], "이", "가") + " " + gr[over] + " — " + WX_HIGH[over].강 +
+      " 다만 " + WX_HIGH[over].주의 + " 이 기운을 다듬으면 오히려 극장점이 됩니다.");
+  if (lows.length)
+    기질.push(lows.map(wx).join("·") + J(WK[lows[lows.length-1]], "은", "는") + " 미약해 " +
+      WX_LOW[lows[0]] + ". 보완할 방법을 함께 찾아야 합니다.");
+  var missing = [];
+  if (bg === 0) missing.push("비겁");
+  if (sik === 0) missing.push("식상");
+  if (jae === 0) missing.push("재성");
+  if (gwan === 0) missing.push("관성");
+  if (inS === 0) missing.push("인성");
+  if (top)
+    기질.push("십성은 " + top.name + " " + top.n + "자가 중심입니다. " + SIP[top.name].강 +
+      " 반대로 " + SIP[top.name].약 +
+      (missing.length ? " " + missing.join("·") + J(missing[missing.length-1], "이", "가") + " 비어 " +
+        missing.map(function(m){ return MISS_MEAN[m]; }).join("과 ") + J(MISS_MEAN[missing[missing.length-1]],"이","가") + " 약합니다." : ""));
+  if (sp.byeongjon && sp.byeongjon.length)
+    기질.push(sp.byeongjon.join(", ") + " — 같은 글자가 나란히 서서 그 기운이 겹쳐 드러납니다.");
+  if (sp.yangEight) 기질.push("여덟 자가 모두 양(양팔통)이라 펼치는 힘은 크되 거두는 자리가 없습니다.");
+  if (sp.yinEight)  기질.push("여덟 자가 모두 음(음팔통)이라 거두는 힘은 크되 펼치는 자리가 없습니다.");
+
+  /* ═ 성격 — 일간 상세 + 일주(일지 십성·지장간·십이운성) ═ */
+  var 성격 = [];
+  성격.push(IG.강 + " 다만 " + IG.약 + (ILGAN_ADD[ilgan] ? " " + ILGAN_ADD[ilgan] : ""));
+  성격.push("일주 " + ilgan + p.il.ji + " — 일지에 " + a.sipseong.ji.il +
+    J(a.sipseong.ji.il, "을", "를") + " 깔아 " + SIP[a.sipseong.ji.il].key +
+    " 성향이 바탕에 놓입니다." + (ILJI_ADD[p.il.ji] ? " " + ILJI_ADD[p.il.ji] : ""));
+  var hidSips = (S.JIJANG[p.il.ji] || []).map(function(x){
+    return x[0] + "(" + S.sipseong(a.chart.ilganIdx, GAN.indexOf(x[0])) + ")";
+  });
+  성격.push("일지 " + p.il.ji + " 지장간에는 " + hidSips.join("·") +
+    " — 겉으로 보이는 것과 다른 결이 안에 숨어 있습니다.");
+  성격.push("일지 십이운성은 " + a.unseong.il + " — " + (UNSEONG_NOTE[a.unseong.il] || "") +
+    "에 앉아 있습니다.");
+
+  /* ═ 대인관계 · 결혼 — 배우자성과 그 손상, 극하는 시기 ═ */
+  var 관계 = [];
+  var spWx = (a.sex === "F") ? gwanWx : GEUK[dw];
+  var spName = (a.sex === "F") ? "관성" : "재성";
+  var spLetters = [];
+  pos.forEach(function(k){
+    if (wxOf(p[k].gan) === spWx) spLetters.push({ k:k, ch:p[k].gan, kind:"간" });
+    if (wxOf(p[k].ji)  === spWx) spLetters.push({ k:k, ch:p[k].ji,  kind:"지" });
+  });
+  var 관계첫 = (a.sex === "F" ? "여성이므로 배우자운은 관성" : "남성이므로 배우자운은 재성") +
+    "(" + W[spWx] + ")으로 봅니다. ";
+  if (!spLetters.length){
+    var duS = null;
+    for (i = 0; i < a.daeun.list.length; i++){
+      var r1 = a.daeun.list[i];
+      if (S.GAN_WX[GAN.indexOf(r1.gan)] === spWx || S.JI_WX[JI.indexOf(r1.ji)] === spWx){ duS = r1; break; }
+    }
+    관계.push(관계첫 + "원국에 " + spName + J(spName, "이", "가") + " 없어 인연은 운에서 옵니다." +
+      (duS ? " " + duS.from + "~" + duS.to + "세 " + duS.gan + duS.ji + " 대운이 " + spName + " 운이며, " +
+        (spWx === ys.yong || spWx === ys.hui ? "용신·희신 쪽이라 이 시기의 인연이 실합니다."
+                                             : "다만 용신 기운은 아니어서 인연의 무게는 따져 봐야 합니다.") : ""));
+  } else {
+    var early = spLetters[0].k === "nyeon" || spLetters[0].k === "wol";
+    관계.push(관계첫 + spName + " 글자는 " +
+      spLetters.map(function(x){ return posKo[x.k] + x.kind + " " + x.ch; }).join(", ") + " — " +
+      (spLetters.length > 1 ? "여럿이라 년→월→일→시 차례로, 이른 인연부터 읽습니다."
+        : early ? "이른 나이부터 인연이 들어오는 배치입니다." : "인연이 늦게 자리 잡는 배치입니다."));
+    var dmg = spLetters.filter(function(x){
+      return rels.some(function(r){ return /충|형/.test(r) && r.indexOf(x.ch) >= 0; });
+    });
+    var tied = spLetters.filter(function(x){
+      return rels.some(function(r){ return /합/.test(r) && r.indexOf(x.ch) >= 0; });
+    });
+    if (dmg.length)
+      관계.push("다만 배우자 글자 " + dmg[0].ch + J(koOf(dmg[0].ch), "이", "가") + " 충·형을 맞고 있어 인연이 흔들리기 쉽습니다.");
+    else if (tied.length)
+      관계.push("배우자 글자가 합으로 묶여 있어, 그 인연이 다른 관계에 매여 오는 수가 있습니다.");
+    else
+      관계.push("배우자 글자는 크게 다치지 않았습니다.");
+  }
+  // 배우자성을 강하게 치는 세운
+  var hitYears = [];
+  for (i = 0; i < 10 && hitYears.length < 2; i++){
+    var yp0 = S.yearPillar(thisYear + i);
+    var hits = (GEUK[wxOf(yp0.gan)] === spWx ? 1 : 0) + (GEUK[wxOf(yp0.ji)] === spWx ? 1 : 0);
+    if (hits >= 1) hitYears.push({ y:thisYear + i, gz:yp0.gan + yp0.ji, strong:hits === 2 });
+  }
+  if (hitYears.length){
+    var hy = hitYears[0];
+    관계.push(hy.y + "년(" + hy.gz + ")은 " + spName + J(spName, "을", "를") +
+      (hy.strong ? " 천간·지지에서 함께 치는 해라" : " 치는 해라") +
+      " 이 무렵의 관계 결정은 한 박자 늦추는 편이 낫습니다.");
+  }
+  // 일지 합충 + 도화
+  var ilChung = rels.filter(function(r){ return r.indexOf(p.il.ji) >= 0 && /충|형/.test(r); });
+  var ilHap   = rels.filter(function(r){ return r.indexOf(p.il.ji) >= 0 && /합/.test(r); });
+  if (ilChung.length) 관계.push("배우자 자리인 일지에 " + ilChung[0] + " — 부부 사이 변동을 겪기 쉽습니다.");
+  else if (ilHap.length) 관계.push("일지가 " + ilHap[0] + "으로 묶여 배우자 인연을 끌어오는 배치입니다.");
+  if (a.sinsal.indexOf("도화") >= 0) 관계.push("도화가 있어 사람을 끄는 힘이 있는 만큼, 정리도 분명해야 합니다.");
+
+  /* ═ 직업 — 격국 + 관운 + 살 ═ */
+  var 직업 = [];
+  var gName = a.gyeokguk.name.replace("격","");
+  var gSip = gName === "건록" ? "비견" : gName === "양인" ? "겁재" : gName;
+  직업.push("격국은 " + a.gyeokguk.name + "(" + a.gyeokguk.basis.replace(" (투출 없음)", " · 투출 없음") + ")입니다. 사회에서는 " +
+    (SIP[gSip] ? SIP[gSip].key + "의 방식으로 역량을 냅니다." : "이 기운의 방식으로 역량을 냅니다."));
+  if (gwan >= 2 && !st.weak)
+    직업.push("관성이 " + gwan + "자로 뚜렷하고 일간도 그 극을 감당할 힘이 있어 관운이 있습니다. 조직과 직급에서 크는 구조입니다.");
+  else if (gwan >= 2)
+    직업.push("관성은 " + gwan + "자로 강하나 일간이 약해 그 극이 버겁습니다. 직장이 곧 스트레스가 되기 쉬우니, 힘을 채워 주는 운의 시기에 승부를 거십시오.");
+  else if (gwan === 1)
+    직업.push("관성이 1자로 얇아 직급보다 실무와 전문성으로 서는 쪽입니다.");
+  else {
+    var duG = null;
+    for (i = 0; i < a.daeun.list.length; i++){
+      var r2 = a.daeun.list[i];
+      if (S.GAN_WX[GAN.indexOf(r2.gan)] === gwanWx || S.JI_WX[JI.indexOf(r2.ji)] === gwanWx){ duG = r2; break; }
+    }
+    직업.push("원국에 관성이 없어 타고난 관운은 약하고, 자기 이름으로 성과가 남는 구조가 맞습니다." +
+      (duG ? " 다만 " + duG.from + "~" + duG.to + "세 " + duG.gan + duG.ji + " 대운에 관성운이 들어오" +
+        (gwanWx === ys.yong || gwanWx === ys.hui ? "고 용신 쪽이라 이 시기는 출세에 유리합니다."
+                                                 : "니 이 시기에는 조직운이 살아납니다.") : ""));
+  }
+  var salBits = [];
+  if (a.sinsal.indexOf("역마") >= 0) salBits.push("역마가 있어 이동·출장·해외처럼 움직이는 일이 맞고");
+  if (a.sinsal.indexOf("화개") >= 0) salBits.push("화개가 있어 혼자 파고드는 연구·전문 분야도 어울립니다");
+  if (salBits.length) 직업.push(salBits.join(", ") + (salBits.length === 1 ? "." : ""));
+  if (sp.sal && sp.sal.same && sp.sal.il)
+    직업.push("일지와 월지가 모두 " + sp.sal.il.name + "(" + sp.sal.il.sal.join("·") + ")에 들어 그 기운이 강하게 발현합니다.");
+
+  /* ═ 재물 ═ */
+  var 재물 = [];
+  재물.push(pj > jj ? "재성은 편재 중심(" + pj + "자)이라 기회성 큰돈에 감각이 있으나, 들어온 돈을 묶어 두는 장치가 먼저입니다."
+    : jj > pj ? "재성은 정재 중심(" + jj + "자)이라 고정수입을 지키고 쌓는 힘이 있습니다."
+    : jae === 0 ? "재성이 원국에 없어 돈을 붙드는 힘보다 만들어 내는 힘을 먼저 세워야 합니다."
+    : "정재와 편재가 나란해 안정 수입과 기회 수입을 함께 다룹니다.");
+  if (jae >= 2)
+    재물.push(st.strong ? "일간이 그 재물을 감당할 만큼 강해 재복이 실합니다."
+      : st.weak ? "재성에 비해 일간이 약해(재다신약) 기회 대비 손에 쥐는 몫이 작을 수 있습니다. 힘을 채우는 운에 벌린 일이 남습니다."
+      : "");
+  if (bg >= 3)
+    재물.push("비겁이 " + bg + "자로 겹쳐 재물을 두고 나누는 형국(군겁쟁재)이라 동업과 금전 대여에서 새기 쉽습니다.");
+
+  /* ═ 건강 ═ */
+  var 건강 = [];
+  if (over >= 0) 건강.push(wx(over) + " 과다로 " + ORGAN[over] + "에 부담이 갑니다.");
+  if (lows.length) 건강.push(wx(lows[0]) + " 미약으로 " + ORGAN[lows[0]] + " 쪽이 무릅니다.");
+  건강.push("의학적 진단이 아니라 오행 치우침에서 읽는 경향입니다.");
+
+  /* ═ 제언 — 대운 흐름 + 공망 + 신살 참고 + 개운 ═ */
+  var 제언 = [];
+  var good = a.daeun.list.filter(function(r){ return r.luck === "대길" || r.luck === "길"; });
+  var bad  = a.daeun.list.filter(function(r){ return r.luck === "흉" || r.luck === "대흉"; });
+  제언.push("대운은 " + (good.length ? ranges(good) + " 구간이 용신 쪽" : "용신 쪽 구간이 뚜렷하지 않") +
+    (bad.length ? "이고, " + ranges(bad) + " 구간이 기신 쪽입니다." : "습니다.") +
+    " 대운이 바뀌는 앞뒤 한두 해는 변동이 몰리니 큰 결정을 피하십시오.");
+  var gmHit = pos.filter(function(k){ return a.gongmang.indexOf(p[k].ji) >= 0; });
+  if (gmHit.length)
+    제언.push("공망(" + a.gongmang.join("") + ")이 " + gmHit.map(function(k){ return posKo[k] + "지"; }).join("·") +
+      "에 닿아 그 자리 글자의 힘은 반감해서 봅니다.");
+  var refSal = a.sinsal.filter(function(x){ return /백호|괴강|양인|원진|귀문/.test(x); });
+  if (refSal.length)
+    제언.push(refSal.join(", ") + " 등이 보이나, 신살은 참고 지표일 뿐 위의 구조 판단을 뒤집지 않습니다.");
+  제언.push("생활에서는 " + a.remedy.color + " 계열과 " + a.remedy.dir + "쪽, " + a.remedy.time +
+    "의 리듬이 용신 " + W[yong] + J(WK[yong], "을", "를") + " 북돋습니다.");
+
+  /* ═ 세운 — 올해·내년의 대운과의 생극 ═ */
+  function seText(y){
+    var yp = S.yearPillar(y);
+    var gw = wxOf(yp.gan);
+    var age = y - birthYear + 1, du = null;
+    a.daeun.list.forEach(function(r){ if (age >= r.from && age <= r.to) du = r; });
+    var luck = S.luckOf(gw, wxOf(yp.ji), ys);
+    var s = [];
+    if (du){
+      var dgw = wxOf(du.gan), rel;
+      if (gw === dgw) rel = "같은 기운이라 그 흐름이 증폭됩니다";
+      else if (SAENG[gw] === dgw) rel = "생(生)하는 관계라 흐름이 순합니다";
+      else if (SAENG[dgw] === gw) rel = "생을 받는 관계라 힘이 실립니다";
+      else if (GEUK[gw] === dgw) rel = "극(剋)하는 관계라 부딪힘이 생깁니다";
+      else rel = "극을 받는 관계라 눌리는 해입니다";
+      s.push(y + "년 " + yp.gan + yp.ji + " — 세운 천간 " + yp.gan + "(" + WK[gw] + ")" +
+        J(WK[gw], "이", "가") + " 대운 " + du.gan + du.ji + "의 천간을 " + rel + ".");
+    } else {
+      s.push(y + "년 " + yp.gan + yp.ji + " — 아직 첫 대운 전이라 세운 위주로 봅니다.");
+    }
+    s.push(luck === "대길" || luck === "길" ? "용신운이라 일을 벌이고 매듭짓기 좋은 해입니다."
+      : luck === "평" ? "무난한 해라 준비와 정리에 알맞습니다."
+      : "기신운이라 확장보다 지키는 쪽이 맞는 해입니다.");
+    var inter = S.interactWith(yp.gan, yp.ji, p).filter(function(x){ return /충/.test(x); });
+    if (inter.length) s.push("원국과 " + inter[0] + " — 그 방면의 변동을 살피십시오.");
+    return s.join(" ").slice(0, 175);
+  }
+
+  /* ═ 키워드 · 꼬리표 ═ */
   var kw = [];
   if (top) kw.push(SIP[top.name].key);
   kw.push(IG.img);
-  if (many.length) kw.push(WK[many[0]] + " 기운");
-  kw.push(st.strong ? "밀고 나가는 힘" : st.weak ? "기대고 조율하는 힘" : "균형");
-  ["역마","도화","화개"].forEach(function(s){
-    if (a.sinsal.indexOf(s) >= 0)
-      kw.push(s === "역마" ? "이동" : s === "도화" ? "사람을 끄는 기운" : "혼자 파고듦");
+  if (over >= 0) kw.push(WK[over] + " " + gr[over]);
+  kw.push(ys.jong ? "종격" : st.strong ? "밀고 나가는 힘" : st.weak ? "기대고 조율하는 힘" : "균형");
+  ["역마","도화","화개"].forEach(function(x){
+    if (a.sinsal.indexOf(x) >= 0)
+      kw.push(x === "역마" ? "이동" : x === "도화" ? "사람을 끄는 기운" : "혼자 파고듦");
   });
 
-  /* 기질 */
-  var 기질 = [];
-  if (top)
-    기질.push("십성으로는 " + top.name + J(top.name, "이", "가") + " " + top.n + "자로 가장 두텁습니다. " +
-      SIP[top.name].강 + " 반대로 " + SIP[top.name].약 + u("S3"));
-  if (bg >= 3)
-    기질.push("비견과 겁재를 합쳐 " + bg + "자로, 보통 서넛을 넘으면 많다고 봅니다. " +
-      "내 것을 나누려는 사람이 주변에 많다는 뜻이어서 의심과 강박이 함께 붙습니다." + u("S1"));
-  // 일간과 같은 오행이 주변에 얼마나 있는가 [직접]
-  var ilWx = S.GAN_WX[S.GAN.indexOf(ilgan)];
-  기질.push(cnt[ilWx] >= 3
-    ? "일간과 같은 " + wx(ilWx) + J(WK[ilWx], "이", "가") + " 주변에 " + cnt[ilWx] +
-      "자로 여럿입니다. 타고난 성질을 밖으로 잘 내보낼 수 있다는 뜻입니다." + u("S0")
-    : "일간과 같은 " + wx(ilWx) + J(WK[ilWx], "은", "는") + " 일간을 빼면 " + (cnt[ilWx] - 1) +
-      "자뿐입니다. 타고난 성질을 잘 드러내지는 않는 쪽입니다." + u("S0"));
-  if (sp.byeongjon && sp.byeongjon.length)
-    기질.push(sp.byeongjon.join(", ") + "이 있습니다. 같은 글자가 나란히 서면 그 기운이 겹쳐 두드러지게 드러납니다." + u("S0"));
-  if (ILGAN_ADD[ilgan]) 기질.push("일간 " + ilgan + "은 " + ILGAN_ADD[ilgan] + u("S0"));
-  기질.push("천간은 하고 싶은 마음이고 지지는 그것을 실현하는 도구입니다. 천간 " +
-    [p.nyeon.gan, p.wol.gan, p.si.gan].join("·") + "이 바라는 바라면, 지지 " +
-    [p.nyeon.ji, p.wol.ji, p.il.ji, p.si.ji].join("·") + "이 그것이 실제로 일어나는 자리입니다." + u("S2","S0"));
-
-  /* 성격과 내면 */
-  var 성격 = [];
-  성격.push("일간 " + ilgan + "은 " + IG.img + "입니다. " + IG.강 + u("S3"));
-  성격.push("그늘 쪽을 보면, " + IG.약 + u("S3"));
-  성격.push("일지 " + p.il.ji + J(S.JI_KO[S.JI.indexOf(p.il.ji)], "은", "는") +
-    " 나의 기본 자질에 해당하는 자리입니다." +
-    (ILJI_ADD[p.il.ji] ? " " + ILJI_ADD[p.il.ji] : "") + u("S0"));
-  성격.push("일지 " + p.il.ji + "은 십이운성으로 " + a.unseong.il + ", " +
-    (UNSEONG_NOTE[a.unseong.il] || "") + "입니다. 스스로를 어떤 상태에 두고 사는지를 보여 주는 자리입니다." +
-    u("R1","S1"));
-
-  /* 대인관계 */
-  var 관계 = [];
-  관계.push("일주는 나 자신이면서 배우자 자리입니다. 이 명식의 일지는 " + p.il.ji +
-    "이고 십성으로 " + a.sipseong.ji.il + "에 해당합니다." + u("S2"));
-  var ilHit = a.relations.filter(function(r){ return r.indexOf(p.il.ji) >= 0 && /충|형|파|해/.test(r); });
-  관계.push(ilHit.length
-    ? "일지에 " + ilHit.join(", ") + "이 걸립니다. 일주가 형·충·파·극을 받으면 부부 사이에 충돌이 있거나 배우자의 건강이 약해질 수 있다고 봅니다." + u("S2")
-    : "일지를 직접 치는 형·충·파·해가 없어 배우자 자리 자체는 비교적 안정된 편입니다." + u("S2"));
-  if (gwan === 0 && jae === 0)
-    관계.push("관성과 재성이 모두 없습니다. 배우자에 해당하는 십성이 원국에 없으면 대운과 세운에서 그 기운이 들어오는 때를 기다리게 됩니다." + u("S1"));
-  if (a.sipseong.ji.il === "편재" && a.sex === "M")
-    관계.push("일지가 편재이고 남성이므로 이 자리는 이성을 뜻합니다. 상대를 통제하려는 성질이 있고 관계의 선이 분명한 편입니다." + u("S0"));
-  if (a.sinsal.indexOf("도화") >= 0)
-    관계.push("도화가 있어 사람을 끄는 기운이 있습니다. 관계가 쉽게 열리는 만큼 정리도 분명해야 합니다." + u("R2"));
-
-  /* 직업 */
-  var 직업 = [];
-  직업.push("격국은 " + a.gyeokguk.name + "입니다. " + a.gyeokguk.basis +
-    ". 월지 지장간 가운데 천간에 드러난 글자로 격을 잡습니다." + u("S1"));
-  직업.push("직장운은 관성으로 봅니다. 이 명식의 관성은 " + gwan + "자" +
-    (gwan >= 2 ? "로 뚜렷해, 조직의 규칙과 평가 안에서 자리를 잡는 구조입니다."
-     : gwan === 1 ? "로 있기는 하되 두텁지 않아, 조직의 위계보다 실무로 인정받는 편이 낫습니다."
-     : "로 없습니다. 조직의 위계보다 자기 이름으로 성과가 남는 구조가 맞습니다.") + u("S1"));
-  직업.push("사업은 재성으로 봅니다. 재성 " + jae + "자, 식상 " + sik + "자입니다. " +
-    (jae >= 2 && st.strong ? "신강하면서 재성이 두터우니 그 재물을 감당할 힘이 있습니다."
-     : jae >= 2 && st.weak ? "재성은 두터운데 일간이 약합니다. 기회에 비해 실제로 벌지 못하거나 분쟁에 휘말릴 수 있어, 힘을 먼저 채워야 합니다."
-     : sik >= 2 ? "재성이 두텁지 않아도 식상이 유리하게 서 있으니, 성실하게 쌓아 올리는 방식이면 사업도 가능합니다."
-     : "재성과 식상이 모두 얇아, 큰 판을 벌이기보다 안정된 수입 구조가 맞습니다.") + u("S1"));
-  var ilSeason = WX_SEASON[S.GAN_WX[S.GAN.indexOf(ilgan)]], wolSeason = jiSeason(p.wol.ji);
-  직업.push("월지는 직장생활을 보는 자리입니다. 일간 " + ilgan + "의 계절은 " + ilSeason +
-    ", 월지 " + p.wol.ji + "의 계절은 " + wolSeason + "입니다." +
-    (ilSeason === wolSeason ? " 둘이 같으니 그 계절에 해당하는 오행의 직업을 고르면 됩니다."
-                            : " 둘이 다르니 하고 싶은 일과 몸담는 자리가 갈릴 수 있습니다.") + u("S0"));
-  직업.push("용신 " + wx(ys.yong) + " 쪽으로는 " + DAEUN_WX[ys.yong] + "이 어울립니다." + u("S2"));
-  var hyeong = a.relations.filter(function(r){ return /형/.test(r); });
-  if (hyeong.length)
-    직업.push("형(" + hyeong.join(", ") + ")이 있습니다. 형이 있는 명식은 법무·건설·사법·의료·세무처럼 규율이 센 환경에서 오히려 제 몫을 하는 경우가 많습니다." + u("S2"));
-
-  /* 재물 */
-  var 재물 = [];
-  재물.push("재성은 정재 " + jj + "자, 편재 " + pj + "자입니다. " +
-    (pj > jj ? "편재가 앞서니 비정기적인 큰돈에 감각이 있습니다. " + SIP["편재"].약
-     : jj > pj ? "정재가 앞서니 고정수입을 지키고 쌓는 힘이 있습니다. " + SIP["정재"].약
-     : jae === 0 ? "재성이 원국에 없어, 돈이 붙는 자리보다 만들어 내는 자리를 먼저 봐야 합니다."
-     : "정재와 편재가 나란해 안정된 수입과 기회성 수입을 함께 다루게 됩니다.") + u("S3"));
-  if (bg >= 3)
-    재물.push("비겁이 " + bg + "자로 두터워 재물을 두고 주변과 나누게 되는 구조입니다. 동업과 금전 대여에서 새는 곳이 생기기 쉽습니다." + u("S3","S1"));
-  재물.push("일간을 돕는 힘이 약하면 벌어도 지키기 어렵다고 봅니다. 이 명식은 " + st.label + "이므로 " +
-    (st.weak ? "버는 힘보다 지키는 힘을 먼저 세우는 편이 낫습니다."
-             : "벌어들인 것을 흘려보내지 않고 묶어 두는 장치가 관건입니다.") + u("S2","S1"));
-
-  /* 건강 */
-  var 건강 = [];
-  if (many.length)
-    건강.push(wx(many[0]) + J(WK[many[0]], "이", "가") + " 치우쳐 " + ORGAN[many[0]] + "에 부담이 갑니다." + u("R2"));
-  if (none.length)
-    건강.push(wx(none[0]) + J(WK[none[0]], "이", "가") + " 없어 " + ORGAN[none[0]] + " 쪽이 무릅니다." + u("R2"));
-  건강.push("한난조습으로는 " + a.johu.text + "에 해당합니다. 너무 덥거나 추운 원국은 온도를 맞추는 일이 먼저입니다." + u("S1"));
-  건강.push("의학적 진단이 아니라 오행의 치우침에서 읽는 경향입니다.");
-
-  /* 제언 */
-  var 제언 = [];
-  제언.push("이 명식이 기다리는 기운은 " + wx(ys.yong) + J(WK[ys.yong], "이", "") + "고, " +
-    wx(ys.hui) + J(WK[ys.hui], "이", "가") + " 이를 돕습니다. 반대로 " +
-    wx(ys.gi) + J(WK[ys.gi], "은", "는") + " 이를 칩니다. 판단 근거는 " + ys.reason + "입니다." + u("S1"));
-  var good = a.daeun.list.filter(function(r){ return r.luck === "대길" || r.luck === "길"; });
-  var bad  = a.daeun.list.filter(function(r){ return r.luck === "흉" || r.luck === "대흉"; });
-  if (good.length)
-    제언.push("대운으로는 " + good.map(function(r){ return r.from + "~" + r.to + "세 " + r.gan + r.ji; }).join(", ") +
-      " 구간이 용신 쪽으로 흐릅니다." + u("S1"));
-  if (bad.length)
-    제언.push("반대로 " + bad.map(function(r){ return r.from + "~" + r.to + "세"; }).join(", ") +
-      " 구간은 기신 쪽입니다. 운과 운 사이 간절기에는 충돌과 변동이 몰리니 대운이 바뀌는 앞뒤 두어 해를 특히 조심하십시오." + u("S3"));
-  if (sp.sal && sp.sal.same && sp.sal.il)
-    제언.push("일지와 월지가 모두 " + sp.sal.il.name + "(" + sp.sal.il.members.join("") +
-      ")에 들어 " + sp.sal.il.sal.join("·") + "이 강하게 발현합니다. 일지와 월지는 일간을 받치는 자리라 그렇습니다." + u("S0"));
-  var chungs = a.relations.filter(function(r){ return /충/.test(r); });
-  if (chungs.length)
-    제언.push("충(" + chungs.join(", ") + ")은 인생에서 예기치 못한 사건으로 나타납니다. 미리 막기보다 벌어졌을 때 빨리 수습하는 쪽으로 대비하십시오." + u("S0"));
-  if (top) 제언.push(SIP[top.name].조언 + u("S3"));
-  제언.push("타고난 것은 기질이고, 그 기질이 어떤 환경을 만나느냐에 따라 발현이 달라집니다. 한 분야에서 너무 어려운 상황만 없으면 좋은 사주라고 봅니다." + u("S1"));
-  제언.push("개운으로는 " + a.remedy.color + " 계열, " + a.remedy.dir + "쪽 방위, " + a.remedy.time +
-    "의 리듬이 용신을 북돋습니다. 사는 자리를 이 방향으로 조금씩 바꾸는 것이 가장 손쉬운 실천입니다." + u("S2","S4"));
-
-  var sources = Object.keys(used).map(function(k){
-    return { tag:SRC[k].tag, name:SRC[k].name, rank:SRC[k].rank };
-  }).sort(function(x, y){ return x.rank - y.rank || x.name.localeCompare(y.name); });
-
-  // A4 3매에 들어가도록 항목별 분량을 제한한다
   return {
-    summary: fit(총평, 372),
+    summary: fit(총평, 430),
     keywords: kw.slice(0, 6).join(", "),
-    temperament: fit(기질, 248),
-    personality: fit(성격, 208),
-    relation: fit(관계, 158),
-    career: fit(직업, 258),
-    wealth: fit(재물, 165),
-    health: fit(건강, 130),
-    advice: fit(제언, 555),
+    temperament: fit(기질, 250),
+    personality: fit(성격, 225),
+    relation: fit(관계, 255),
+    career: fit(직업, 255),
+    wealth: fit(재물, 150),
+    health: fit(건강, 95),
+    advice: fit(제언, 420),
+    seThis: seText(thisYear),
+    seNext: seText(thisYear + 1),
     tags: {
       personality: (top ? top.name + " 중심 · " : "") + IG.img,
-      relation: "일지 " + p.il.ji + " " + a.sipseong.ji.il,
+      relation: spName + " " + (spLetters.length ? spLetters.length + "자" : "무") + " · 일지 " + a.sipseong.ji.il,
       career: a.gyeokguk.name + " · 관성 " + gwan + "자",
       wealth: pj > jj ? "편재형" : jj > pj ? "정재형" : "재성 " + jae + "자",
-      health: (many.length ? WK[many[0]] + " 과다" : "") +
-              (none.length ? (many.length ? " · " : "") + WK[none[0]] + " 없음" : "")
-    },
-    sources: sources
+      health: (over >= 0 ? WK[over] + " 과다" : "") +
+              (lows.length ? (over >= 0 ? " · " : "") + WK[lows[0]] + " 미약" : "")
+    }
   };
 }
 
-/* ── 3순위 · AI 프롬프트 만들기 ──────────────────────────────
-   여기서 AI를 부르지 않는다. 계산된 명식과 1·2순위로 이미 정리된 내용을
-   담은 프롬프트를 만들어 줄 뿐이고, 사람이 그것을 챗지피티 등에 넣어
-   받아 온 답을 세 번째 자리에 붙인다. */
+/* ── AI 프롬프트 — 사람이 받아 온 답을 3순위 참고로 쓴다 ──── */
 function buildPrompt(a, S, draft){
   var p = a.pillars, W = S.WX_HANJA, L = [];
   var pos = ["nyeon","wol","il","si"];
@@ -439,7 +499,7 @@ function buildPrompt(a, S, draft){
          "  (천간 각 10, 지지 시15·일15·월30·년10, 합 110)");
   L.push("  강약       " + a.strength.label + " " + a.strength.pct + "%  득령 " +
          (a.strength.deukRyeong ? "O" : "X") + " 득지 " + (a.strength.deukJi ? "O" : "X") +
-         " 득세 " + (a.strength.deukSe ? "O" : "X"));
+         " 득세 " + (a.strength.deukSe ? "O" : "X") + (a.yongsin.jong ? "  종격" : ""));
   L.push("  한난조습   " + a.johu.text);
   L.push("  격국       " + a.gyeokguk.name + " (" + a.gyeokguk.basis + ")");
   L.push("  용신·희신  " + W[a.yongsin.yong] + "·" + W[a.yongsin.hui] +
@@ -452,7 +512,7 @@ function buildPrompt(a, S, draft){
   if (draft){
     L.push("[이미 정리된 내용 — 되풀이하지 마십시오]");
     ["summary","personality","relation","career","wealth","health","advice"].forEach(function(k){
-      if (draft[k]) L.push("- " + draft[k].replace(/\s*\[[^\]]*\]/g, "").slice(0, 300));
+      if (draft[k]) L.push("- " + draft[k].slice(0, 300));
     });
     L.push("");
   }
@@ -463,5 +523,5 @@ function buildPrompt(a, S, draft){
   return L.join("\n");
 }
 
-return { generate:generate, buildPrompt:buildPrompt, SRC:SRC, ILGAN:ILGAN, SIP:SIP };
+return { generate:generate, buildPrompt:buildPrompt, ILGAN:ILGAN, SIP:SIP };
 });
