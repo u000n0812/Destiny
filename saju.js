@@ -625,7 +625,7 @@ function yongsin(ilganIdx, str, prof, jh){
   return { yong: pick, hui: hui, gi: gi, gu: gu, jong: false, reason: reason };
 }
 
-/* ── 대운 · 길흉 ─────────────────────────────────────────── */
+/* ── 대운 ────────────────────────────────────────────────── */
 function daeun(chart, sex, count){
   count = count || 8;
   var p = chart.pillars;
@@ -643,16 +643,18 @@ function daeun(chart, sex, count){
   }
   return { forward: forward, startAge: startAge, days: days, list: list };
 }
-function luckOf(ganWx, jiWx, ys){
-  function pt(w){
-    if (w === ys.yong) return 2;
-    if (w === ys.hui)  return 1;
-    if (w === ys.gi)   return -2;
-    if (w === ys.gu)   return -1;
+/* 운 한 칸이 용신 쪽 기운을 데려오는지 기신 쪽을 데려오는지만 가린다.
+   '대길·흉' 같은 등급은 매기지 않는다. 등급을 적어 두면 읽는 사람이 그 두 글자만
+   보고 말기 때문에, 무엇이 어떻게 들어오는지 문장으로 푸는 쪽을 택했다. */
+function unBearing(ganWx, jiWx, ys){
+  function side(w){
+    if (w === ys.yong || w === ys.hui) return 1;
+    if (w === ys.gi   || w === ys.gu)  return -1;
     return 0;
   }
-  var s = pt(ganWx) + pt(jiWx);
-  return s >= 3 ? "대길" : s >= 1 ? "길" : s === 0 ? "평" : s >= -2 ? "흉" : "대흉";
+  var a = side(ganWx), b = side(jiWx);
+  return { favor: (a > 0 || b > 0), block: (a < 0 || b < 0),
+           gan: a, ji: b };
 }
 
 /* ── 개운 ────────────────────────────────────────────────── */
@@ -753,7 +755,7 @@ function analyze(input){
   var ys   = yongsin(ig, str, prof, jh);
   var du   = daeun(chart, input.sex, 8);
   du.list.forEach(function(r){
-    r.luck = luckOf(GAN_WX[GAN.indexOf(r.gan)], JI_WX[JI.indexOf(r.ji)], ys);
+    r.bearing = unBearing(GAN_WX[GAN.indexOf(r.gan)], JI_WX[JI.indexOf(r.ji)], ys);
   });
 
   var gm = gongmang(chart.dayIdx60);
@@ -805,7 +807,7 @@ return {
   findRelations:findRelations, findSinsal:findSinsal, gongmang:gongmang,
   SIBI_SINSAL:SIBI_SINSAL, sibiSinsal:sibiSinsal, twelveSinsal:twelveSinsal,
   HONGYEOM:HONGYEOM, CHEONEUL:CHEONEUL, BAEKHO:BAEKHO, GWAEGANG:GWAEGANG,
-  lunarDate:lunarDate, yearPillar:yearPillar, luckOf:luckOf, REMEDY:REMEDY,
+  lunarDate:lunarDate, yearPillar:yearPillar, unBearing:unBearing, REMEDY:REMEDY,
   JI_GROUP:JI_GROUP, groupOf:groupOf, gradeOf:gradeOf, specials:specials,
   interactWith:interactWith
 };

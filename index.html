@@ -37,7 +37,7 @@
   --wx-geum:#B85C8A;
   --wx-su:#2F6DB5;
 
-  /* 길흉 상태색 — 오행 계열과 분리 */
+  /* 상태색 — 오행 계열과 분리 */
   --st-good:#1F6F4A;
   --st-mid:#6B7280;
   --st-bad:#A62B24;
@@ -347,18 +347,9 @@ input[type="range"].f:focus-visible::-moz-range-thumb{outline:2px solid var(--ac
 .daeun td .f{text-align:center; font-size:8pt; padding:2.5px 3px; border-radius:0}
 .daeun td.gz-cell .f{font-family:var(--f-serif); font-size:12pt; padding:1px 3px 2px}
 .daeun td.age .f{font-variant-numeric:tabular-nums; color:var(--ink-2); font-size:7.8pt}
-.daeun td.kw .f{text-align:left; font-size:7.6pt; color:var(--ink-2)}
-.daeun td.luck{padding:2px}
-.luckpick{
-  font:inherit; font-size:7.6pt; letter-spacing:.06em; width:100%;
-  border:1px solid transparent; border-radius:9px; padding:1.5px 2px;
-  text-align:center; -webkit-appearance:none; appearance:none; cursor:pointer;
-  background:var(--panel); color:var(--ink-2);
-}
-.luckpick:focus{outline:2px solid var(--accent); outline-offset:1px}
-.luckpick[data-luck="대길"],.luckpick[data-luck="길"]{color:var(--st-good); border-color:var(--st-good)}
-.luckpick[data-luck="평"]{color:var(--st-mid); border-color:var(--st-mid)}
-.luckpick[data-luck="흉"],.luckpick[data-luck="대흉"]{color:var(--st-bad); border-color:var(--st-bad)}
+/* 요약은 한 줄 입력이 아니라 여러 줄로 접히는 칸이다. 좁은 화면에서 한 줄에
+   다 들어가지 않아 잘려 나가던 것을 막는다. 넓은 화면에서는 그대로 한 줄이다. */
+.daeun td.kw .f{text-align:left; font-size:7.6pt; line-height:1.45; color:var(--ink-2)}
 .daeun td.cur{box-shadow:inset 0 0 0 2px var(--accent)}
 
 /* ---------- 개운법 ---------- */
@@ -399,10 +390,7 @@ input[type="range"].f:focus-visible::-moz-range-thumb{outline:2px solid var(--ac
   .page:last-child{break-after:auto; page-break-after:auto}
   .f{background:transparent!important; box-shadow:none!important}
   .f::placeholder{color:transparent!important}
-  select.f, .luckpick{border-color:transparent}
-  .luckpick[data-luck="대길"],.luckpick[data-luck="길"]{border-color:var(--st-good)}
-  .luckpick[data-luck="평"]{border-color:var(--st-mid)}
-  .luckpick[data-luck="흉"],.luckpick[data-luck="대흉"]{border-color:var(--st-bad)}
+  select.f{border-color:transparent}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
 
@@ -701,13 +689,26 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
   .ms-cell.ms-small .f{font-size:16px}
   .wxtag{font-size:9px}
 
-  /* ── 대운표 ── 좁은 화면에서는 '요약' 칸을 접어 네 칸으로 읽는다 */
-  .daeun th:last-child, .daeun td.kw{display:none}
-  .daeun th{font-size:10.5px; padding:5px 2px}
-  .daeun td .f{font-size:16px; padding:5px 1px}
-  .daeun td.gz-cell .f{font-size:21px}
-  .daeun td.age .f{font-size:16px}
-  .luckpick{font-size:15px; padding:6px 1px; border-radius:11px}
+  /* ── 대운표 ──
+     좁은 화면에서는 한 구간을 한 덩이로 읽는다. 나이·간지·십성이 윗줄에 서고
+     흐름 요약이 아랫줄을 온전히 쓴다. 요약이 곧 그 10년의 설명이라 접지 않는다. */
+  .daeun, .daeun tbody{display:block}
+  .daeun thead{display:none}
+  .daeun tr{
+    display:grid; grid-template-columns:72px 54px 1fr; align-items:center;
+    gap:3px 8px; padding:6px 8px; margin-bottom:5px;
+    border:1px solid var(--rule); border-radius:2px;
+  }
+  .daeun tr:last-child{margin-bottom:0}
+  .daeun td{border:0; padding:0; text-align:left}
+  .daeun td.kw{grid-column:1/-1}
+  .daeun td .f{font-size:16px; padding:2px 1px; text-align:left}
+  .daeun td.gz-cell .f{font-size:22px; text-align:center}
+  .daeun td.age .f{font-size:16px; color:var(--ink-2)}
+  .daeun td.kw .f{font-size:16px; line-height:1.5; color:var(--ink-2)}
+  /* 현재 대운은 칸마다가 아니라 덩이째 두른다 */
+  .daeun td.cur{box-shadow:none}
+  .daeun tr.cur{box-shadow:inset 0 0 0 2px var(--accent); border-color:transparent}
 
   /* ── 입력 패널 ── */
   /* 두 칸 격자로 세운다 — 성명|성별 / 생년월일 / 출생시각|시각 모름 / 자시 기준 / 자동 계산 … */
@@ -1164,10 +1165,9 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
       <table class="daeun">
         <thead>
           <tr>
-            <th style="width:13mm">나이</th>
-            <th style="width:16mm">간지</th>
-            <th style="width:19mm">십성</th>
-            <th style="width:17mm">길흉</th>
+            <th style="width:14mm">나이</th>
+            <th style="width:17mm">간지</th>
+            <th style="width:21mm">십성</th>
             <th>흐름 요약</th>
           </tr>
         </thead>
@@ -1837,7 +1837,7 @@ function yongsin(ilganIdx, str, prof, jh){
   return { yong: pick, hui: hui, gi: gi, gu: gu, jong: false, reason: reason };
 }
 
-/* ── 대운 · 길흉 ─────────────────────────────────────────── */
+/* ── 대운 ────────────────────────────────────────────────── */
 function daeun(chart, sex, count){
   count = count || 8;
   var p = chart.pillars;
@@ -1855,16 +1855,18 @@ function daeun(chart, sex, count){
   }
   return { forward: forward, startAge: startAge, days: days, list: list };
 }
-function luckOf(ganWx, jiWx, ys){
-  function pt(w){
-    if (w === ys.yong) return 2;
-    if (w === ys.hui)  return 1;
-    if (w === ys.gi)   return -2;
-    if (w === ys.gu)   return -1;
+/* 운 한 칸이 용신 쪽 기운을 데려오는지 기신 쪽을 데려오는지만 가린다.
+   '대길·흉' 같은 등급은 매기지 않는다. 등급을 적어 두면 읽는 사람이 그 두 글자만
+   보고 말기 때문에, 무엇이 어떻게 들어오는지 문장으로 푸는 쪽을 택했다. */
+function unBearing(ganWx, jiWx, ys){
+  function side(w){
+    if (w === ys.yong || w === ys.hui) return 1;
+    if (w === ys.gi   || w === ys.gu)  return -1;
     return 0;
   }
-  var s = pt(ganWx) + pt(jiWx);
-  return s >= 3 ? "대길" : s >= 1 ? "길" : s === 0 ? "평" : s >= -2 ? "흉" : "대흉";
+  var a = side(ganWx), b = side(jiWx);
+  return { favor: (a > 0 || b > 0), block: (a < 0 || b < 0),
+           gan: a, ji: b };
 }
 
 /* ── 개운 ────────────────────────────────────────────────── */
@@ -1965,7 +1967,7 @@ function analyze(input){
   var ys   = yongsin(ig, str, prof, jh);
   var du   = daeun(chart, input.sex, 8);
   du.list.forEach(function(r){
-    r.luck = luckOf(GAN_WX[GAN.indexOf(r.gan)], JI_WX[JI.indexOf(r.ji)], ys);
+    r.bearing = unBearing(GAN_WX[GAN.indexOf(r.gan)], JI_WX[JI.indexOf(r.ji)], ys);
   });
 
   var gm = gongmang(chart.dayIdx60);
@@ -2017,7 +2019,7 @@ return {
   findRelations:findRelations, findSinsal:findSinsal, gongmang:gongmang,
   SIBI_SINSAL:SIBI_SINSAL, sibiSinsal:sibiSinsal, twelveSinsal:twelveSinsal,
   HONGYEOM:HONGYEOM, CHEONEUL:CHEONEUL, BAEKHO:BAEKHO, GWAEGANG:GWAEGANG,
-  lunarDate:lunarDate, yearPillar:yearPillar, luckOf:luckOf, REMEDY:REMEDY,
+  lunarDate:lunarDate, yearPillar:yearPillar, unBearing:unBearing, REMEDY:REMEDY,
   JI_GROUP:JI_GROUP, groupOf:groupOf, gradeOf:gradeOf, specials:specials,
   interactWith:interactWith
 };
@@ -2537,11 +2539,21 @@ function generate(a, S){
 
   /* ═ 제언 ═ */
   var 제언 = [];
-  var good = a.daeun.list.filter(function(r){ return r.luck === "대길" || r.luck === "길"; });
-  var bad  = a.daeun.list.filter(function(r){ return r.luck === "흉" || r.luck === "대흉"; });
-  제언.push("대운은 " + (good.length ? ranges(good) + " 구간이 용신 쪽" : "용신 쪽 구간이 뚜렷하지 않") +
-    (bad.length ? "이고, " + ranges(bad) + " 구간이 기신 쪽입니다." : "습니다.") +
-    " 대운이 바뀌는 앞뒤 한두 해는 변동이 몰리니 큰 결정을 피하십시오.");
+  // 구간마다 등급을 매기지 않고, 어느 구간에 무슨 기운이 들어오는지로 적는다
+  var good = a.daeun.list.filter(function(r){ return r.bearing.favor && !r.bearing.block; });
+  var bad  = a.daeun.list.filter(function(r){ return r.bearing.block && !r.bearing.favor; });
+  var yongIn = "용신 " + W[yong] + " 쪽 기운이 들어와 하려는 일이 순하게 풀";
+  var giIn   = "기신 " + W[ys.gi] + " 쪽 기운이 들어와 같은 일에도 힘이 더 듭니다.";
+  var duLine;
+  if (good.length && bad.length)
+    duLine = "대운은 " + ranges(good) + " 구간에 " + yongIn + "리고, " + ranges(bad) + " 구간에는 " + giIn;
+  else if (good.length)
+    duLine = "대운은 " + ranges(good) + " 구간에 " + yongIn + "립니다.";
+  else if (bad.length)
+    duLine = "대운은 " + ranges(bad) + " 구간에 " + giIn;
+  else
+    duLine = "대운은 용신 쪽으로도 기신 쪽으로도 크게 기울지 않아 흐름이 완만합니다.";
+  제언.push(duLine + " 대운이 바뀌는 앞뒤 한두 해는 변동이 몰리니 큰 결정을 피하십시오.");
   var gmHit = pos.filter(function(k){ return a.gongmang.indexOf(p[k].ji) >= 0; });
   if (gmHit.length)
     제언.push(gmHit.map(function(k){ return posKo[k] + "지"; }).join("·") +
@@ -2563,7 +2575,7 @@ function generate(a, S){
     var seGroup = SIP_GROUP[seSip];
     var age = y - birthYear + 1, du = null;
     a.daeun.list.forEach(function(r){ if (age >= r.from && age <= r.to) du = r; });
-    var luck = S.luckOf(gw, wxOf(yp.ji), ys);
+    var bear = S.unBearing(gw, wxOf(yp.ji), ys);
     var s = [];
     s.push(y + "년 " + yp.gan + yp.ji + "년에는 " + SE_EVENT[seGroup] + " 방면의 일이 앞에 놓입니다. 세운 천간 " +
       yp.gan + J(koOf(yp.gan), "이", "가") + " 일간에게 " + seSip + "(" + seGroup + ")이기 때문입니다.");
@@ -2575,16 +2587,17 @@ function generate(a, S){
       else if (GEUK[gw] === dgw) rel = "극(剋)하는 사이라 부딪히고";
       else rel = "극을 받는 사이라 눌리고";
       s.push("대운 " + du.gan + du.ji + J(koOf(du.ji), "과는", "와는") + " " + rel + ", 용신 " + W[yong] + " 기준 " +
-        (luck === "대길" || luck === "길" ? "길운이라 벌이고 매듭짓기 좋은 해입니다."
-         : luck === "평" ? "무난한 해라 준비와 정리에 알맞습니다."
-         : "기신운이라 확장보다 지키는 쪽이 맞습니다."));
+        (bear.favor && !bear.block ? "힘을 받는 해라 벌이고 매듭짓기에 알맞습니다."
+         : bear.block && !bear.favor ? "힘이 눌리는 해라 확장보다 지키는 쪽이 맞습니다."
+         : "밀고 당기는 기운이 섞인 해라 준비와 정리에 알맞습니다."));
     }
     var chung = S.interactWith(yp.gan, yp.ji, p).filter(function(x){ return /충/.test(x); });
     if (chung.length){
       var tgt = null;
       pos.forEach(function(k){ if (!tgt && chung[0].indexOf(p[k].ji) >= 1) tgt = k; });
       pos.forEach(function(k){ if (!tgt && chung[0].indexOf(p[k].gan) >= 1) tgt = k; });
-      s.push("특히 " + chung[0] + J(koOf(chung[0][1]), "이", "가") + " 걸려 " +
+      // 조사는 바로 앞 글자를 따른다 — '午子충' 뒤에는 지지가 아니라 '충'을 본다
+      s.push("특히 " + chung[0] + J(chung[0].slice(-1), "이", "가") + " 걸려 " +
         (tgt ? PILLAR_HIT[tgt] + " 쪽" : "그 방면") + " 변동을 살펴야 합니다.");
     }
     return s.join(" ").slice(0, 210);
@@ -2601,9 +2614,26 @@ function generate(a, S){
       kw.push(x === "역마" ? "이동" : x === "도화" ? "사람을 끄는 기운" : "혼자 파고듦");
   });
 
+  /* ═ 대운 구간별 한 줄 ═
+     길흉 등급을 걷어낸 자리를 채운다. 등급 두 글자 대신, 그 10년에 어느 방면이
+     앞에 서고 일간에게 무슨 기운으로 오는지 한 줄로 적는다. */
+  var duKw = a.daeun.list.map(function(r){
+    // 십성 칸이 이미 이름을 보여 주므로, 여기에는 그 십성이 무엇으로 오는지를 적는다
+    var key = (SIP[r.sipGan] || {}).key, grp = SIP_GROUP[r.sipGan];
+    var head = key ? key + " 쪽 일이 앞에 섭니다"
+             : grp ? GROUP_EFFECT[grp] + J(GROUP_EFFECT[grp], "이", "가") + " 앞에 섭니다"
+             : "흐름이 완만합니다";
+    var tail = r.bearing.favor && !r.bearing.block ? "용신 " + W[yong] + " 쪽이라 애쓴 만큼 남습니다"
+             : r.bearing.block && !r.bearing.favor ? "기신 " + W[ys.gi] + " 쪽이라 무리하면 탈이 납니다"
+             : r.bearing.favor ? "용신과 기신이 섞여 오르내립니다"
+             : "용신과 무관해 기복이 크지 않습니다";
+    return head + ". " + tail + ".";
+  });
+
   var out = {
     summary: fit(총평, 430),
     keywords: kw.slice(0, 6).join(", "),
+    duKw: duKw,
     temperament: fit(기질, 275),
     personality: fit(성격, 280),
     relation: fit(관계, 275),
@@ -2706,7 +2736,7 @@ function buildPrompt(a, S, draft){
   L.push("  형충회합   " + (a.relations.join(", ") || "없음"));
   L.push("  신살       " + (a.sinsal.join(", ") || "없음") + "  공망 " + a.gongmang.join(""));
   L.push("  대운       " + (a.daeun.forward ? "순행" : "역행") + " " + a.daeun.startAge + "세부터 — " +
-         a.daeun.list.map(function(r){ return r.from + "세 " + r.gan + r.ji + "(" + r.luck + ")"; }).join(", "));
+         a.daeun.list.map(function(r){ return r.from + "세 " + r.gan + r.ji + " " + r.sipGan + "·" + r.sipJi; }).join(", "));
   L.push("");
   if (draft){
     L.push("[이미 정리된 내용 — 되풀이하지 마십시오]");
@@ -2756,22 +2786,20 @@ function wuxingOf(str){
   return null;
 }
 
-/* ── 대운표 생성 ──────────────────────────────────────────── */
-var LUCKS = ["","대길","길","평","흉","대흉"];
+/* ── 대운표 생성 ──────────────────────────────────────────────
+   길흉 등급 칸은 두지 않는다. 한 구간을 '흉'이라 못 박아 두면 읽는 사람은
+   그 두 글자만 보고 만다. 그 자리는 아래 세운·제언에서 무슨 기운이 어떻게
+   들어오는지 풀어 쓰는 것으로 대신한다. */
 (function buildDaeun(){
   var tb = document.getElementById("daeunBody");
   var html = "";
   for(var i=0;i<DAEUN_ROWS;i++){
-    var opts = LUCKS.map(function(l){
-      return '<option value="'+l+'">'+(l||"—")+'</option>';
-    }).join("");
     html +=
       '<tr>'+
         '<td class="age"><input class="f" data-k="du.'+i+'.age" placeholder="'+(7+i*10)+'~'+(16+i*10)+'"></td>'+
         '<td class="gz-cell"><input class="f" data-k="du.'+i+'.gz" maxlength="4" placeholder="―"></td>'+
         '<td><input class="f" data-k="du.'+i+'.sip" placeholder="―"></td>'+
-        '<td class="luck"><select class="luckpick" data-k="du.'+i+'.luck" data-luck="">'+opts+'</select></td>'+
-        '<td class="kw"><input class="f" data-k="du.'+i+'.kw" placeholder="한 줄 요약"></td>'+
+        '<td class="kw"><textarea class="f" rows="1" data-k="du.'+i+'.kw" placeholder="한 줄 요약"></textarea></td>'+
       '</tr>';
   }
   tb.innerHTML = html;
@@ -3004,8 +3032,8 @@ function clearAllFields(){
    이 최소 높이가 곧 '이 칸에 쓸 수 있는 분량'의 기준선이 된다.
    다만 좁은 화면에서는 A4 한 장을 채울 일이 없으므로 그 여백이 빈 스크롤이 될 뿐이다.
    손가락으로 짚을 만큼(두 줄)만 남기고, 인쇄할 때는 언제나 rows 기준으로 되돌린다. */
-function setFloors(forPrint){
-  var narrow = !forPrint && window.matchMedia("(max-width:680px)").matches;
+function setFloors(){
+  var narrow = window.matchMedia("(max-width:680px)").matches;
   document.querySelectorAll("textarea.f").forEach(function(t){
     var rows = parseInt(t.getAttribute("rows"), 10) || 3;
     var cs = getComputedStyle(t);
@@ -3016,12 +3044,11 @@ function setFloors(forPrint){
   });
 }
 
-function autoGrow(el, forPrint){
+function autoGrow(el){
   if(el.tagName !== "TEXTAREA") return;
   // A4에서는 rows 로 잡아 둔 여백이 지면을 고르게 잡아 주지만, 좁은 화면에서는
   // 빈 칸만큼 스크롤이 길어진다. 잴 때만 한 줄로 낮춰 실제 내용 높이를 얻는다.
-  // 인쇄할 때는 화면 폭과 무관하게 언제나 A4 기준(rows 그대로)으로 되돌린다.
-  var narrow = !forPrint && window.matchMedia("(max-width:680px)").matches;
+  var narrow = window.matchMedia("(max-width:680px)").matches;
   var rows = el.rows;
   if(narrow) el.rows = 1;
   el.style.height = "auto";
@@ -3142,12 +3169,6 @@ function renderScale(){
   document.getElementById("scaleMark").style.left = v + "%";
 }
 
-function renderLuck(){
-  document.querySelectorAll(".luckpick").forEach(function(sel){
-    sel.dataset.luck = sel.value;
-  });
-}
-
 function renderEchoes(){
   var name = (document.querySelector('[data-k="c.name"]').value || "").trim();
   var date = (document.querySelector('[data-k="meta.date"]').value || "").trim();
@@ -3179,7 +3200,6 @@ function refreshAll(){
   renderWuxing();
   renderSipseong();
   renderScale();
-  renderLuck();
   renderEchoes();
   checkOverflow();
 }
@@ -3208,11 +3228,11 @@ document.getElementById("daeunBody").addEventListener("click", function(e){
   var row = td.parentNode;
   var on = row.classList.contains("cur-row");
   Array.prototype.forEach.call(this.rows, function(r){
-    r.classList.remove("cur-row");
+    r.classList.remove("cur-row"); r.classList.remove("cur");
     Array.prototype.forEach.call(r.cells, function(c){ c.classList.remove("cur"); });
   });
   if(!on){
-    row.classList.add("cur-row");
+    row.classList.add("cur-row"); row.classList.add("cur");
     Array.prototype.forEach.call(row.cells, function(c){ c.classList.add("cur"); });
   }
   save();
@@ -3375,13 +3395,13 @@ function runCalc(){
     setAuto("du."+i+".age", r.from + "~" + r.to);
     setAuto("du."+i+".gz", r.gan + r.ji);
     setAuto("du."+i+".sip", r.sipGan + "·" + r.sipJi);
-    setAuto("du."+i+".luck", r.luck);
   });
   // 현재 대운 표시
   var age = new Date().getFullYear() - input.y + 1;
   document.querySelectorAll("#daeunBody tr").forEach(function(tr, i){
     var r = a.daeun.list[i], on = r && age >= r.from && age <= r.to;
     Array.prototype.forEach.call(tr.cells, function(c){ c.classList.toggle("cur", !!on); });
+    tr.classList.toggle("cur", !!on);   // 좁은 화면에서는 줄째 두른다
   });
 
   // 세운
@@ -3390,9 +3410,7 @@ function runCalc(){
   [[yNow,"this"],[yNow+1,"next"]].forEach(function(pair){
     var yp = Saju.yearPillar(pair[0]);
     var sg = Saju.sipseong(a.chart.ilganIdx, Saju.GAN.indexOf(yp.gan));
-    var lk = Saju.luckOf(Saju.GAN_WX[Saju.GAN.indexOf(yp.gan)],
-                         Saju.JI_WX[Saju.JI.indexOf(yp.ji)], a.yongsin);
-    setAuto("se."+pair[1]+"Gz", yp.gan + yp.ji + " · " + sg + " · " + lk);
+    setAuto("se."+pair[1]+"Gz", yp.gan + yp.ji + " · " + sg);
   });
 
   lastAnalysis = a; lastDraft = null;
@@ -3518,17 +3536,15 @@ function renderBoard(){
       return '<td><span class="big' + wxCls(r.gan) + '">' + r.gan + '</span><br><span class="big' +
         wxCls(r.ji) + '">' + r.ji + "</span></td>"; }).join("") + "</tr>" +
     '<tr><td class="lbl">십성</td>' + a.daeun.list.map(function(r){
-      return '<td><span class="sm">' + r.sipGan + "<br>" + r.sipJi + "</span></td>"; }).join("") + "</tr>" +
-    '<tr><td class="lbl">길흉</td>' + a.daeun.list.map(function(r){
-      return "<td>" + r.luck + "</td>"; }).join("") + "</tr></table></div>");
+      return '<td><span class="sm">' + r.sipGan + "<br>" + r.sipJi + "</span></td>"; }).join("") +
+    "</tr></table></div>");
 
   // 세운 10년
   var y0 = new Date().getFullYear(), se = [];
   for (var i = 0; i < 10; i++){
     var yp = S.yearPillar(y0 + i);
     se.push({ y:y0+i, gan:yp.gan, ji:yp.ji,
-      sip:S.sipseong(a.chart.ilganIdx, S.GAN.indexOf(yp.gan)),
-      luck:S.luckOf(S.GAN_WX[S.GAN.indexOf(yp.gan)], S.JI_WX[S.JI.indexOf(yp.ji)], a.yongsin) });
+      sip:S.sipseong(a.chart.ilganIdx, S.GAN.indexOf(yp.gan)) });
   }
   H.push('<div class="bcard wide"><h4>세운 — ' + y0 + "년부터 10년</h4><table class=\"btab\"><tr><th>해</th>" +
     se.map(function(r){ return "<th>" + String(r.y).slice(2) + "</th>"; }).join("") + "</tr>" +
@@ -3536,9 +3552,8 @@ function renderBoard(){
       return '<td><span class="big' + wxCls(r.gan) + '">' + r.gan + '</span><span class="big' +
         wxCls(r.ji) + '">' + r.ji + "</span></td>"; }).join("") + "</tr>" +
     '<tr><td class="lbl">십성</td>' + se.map(function(r){
-      return '<td><span class="sm">' + r.sip + "</span></td>"; }).join("") + "</tr>" +
-    '<tr><td class="lbl">길흉</td>' + se.map(function(r){
-      return "<td>" + r.luck + "</td>"; }).join("") + "</tr></table></div>");
+      return '<td><span class="sm">' + r.sip + "</span></td>"; }).join("") +
+    "</tr></table></div>");
 
   box.innerHTML = H.join("");
 }
@@ -3546,7 +3561,7 @@ function renderBoard(){
 /* ── 해석 초안 (1·2순위) ───────────────────────────────────── */
 g("bDraft").addEventListener("click", function(){
   if (typeof Interpret === "undefined"){
-    alert("해석 엔진(interpret.js)을 불러오지 못했습니다. 세 파일을 같은 폴더에 두십시오."); return;
+    alert("해석 엔진을 불러오지 못했습니다. 파일이 온전한지 확인해 주십시오."); return;
   }
   if (!lastAnalysis){ alert("먼저 자동 계산을 눌러 주십시오."); return; }
   var written = ["summary","temperament","p.personality","p.relation","p.career","p.wealth","p.health","advice"]
@@ -3566,6 +3581,7 @@ g("bDraft").addEventListener("click", function(){
   setAuto("advice", d.advice);
   setAuto("se.thisTxt", d.seThis);
   setAuto("se.nextTxt", d.seNext);
+  (d.duKw || []).forEach(function(t, i){ setAuto("du." + i + ".kw", t); });
   Object.keys(d.tags).forEach(function(k){ setAuto("t." + k, d.tags[k]); });
   refreshAll(); save();
 
@@ -3946,10 +3962,17 @@ document.addEventListener("keydown", function(e){
     clearTimeout(reflow); reflow = setTimeout(reflowAll, 90);
   });
   window.addEventListener("orientationchange", function(){ setTimeout(reflowAll, 220); });
-  // 인쇄할 때는 화면 폭과 무관하게 A4 기준 높이로 되돌려야 세 쪽 배분이 유지된다.
-  // 휴대폰에서 인쇄해도 결과 PDF는 데스크톱에서 뽑은 것과 같아야 한다.
+  // 인쇄할 때는 화면 폭과 무관하게 같은 3쪽이 나와야 한다.
+  // 좁은 화면에서 잰 칸 높이를 그대로 들고 가면 A4에서 지면이 밀리므로,
+  // 인라인 높이를 걷어내고 rows 와 인쇄용 CSS 가 정하게 둔다. 그것이 곧 A4 설계값이다.
+  // 넓은 화면에서는 이미 A4에 가깝게 재어 둔 값이라 그대로 다시 재기만 한다.
   window.addEventListener("beforeprint", function(){
-    setMode(true); setFloors(true); fields.forEach(function(el){ autoGrow(el, true); });
+    setMode(true);
+    if (window.matchMedia("(max-width:680px)").matches)
+      fields.forEach(function(el){
+        if (el.tagName === "TEXTAREA"){ el.style.height = ""; el.style.minHeight = ""; }
+      });
+    else reflowAll();
   });
   window.addEventListener("afterprint", reflowAll);
 })();

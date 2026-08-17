@@ -510,11 +510,21 @@ function generate(a, S){
 
   /* ═ 제언 ═ */
   var 제언 = [];
-  var good = a.daeun.list.filter(function(r){ return r.luck === "대길" || r.luck === "길"; });
-  var bad  = a.daeun.list.filter(function(r){ return r.luck === "흉" || r.luck === "대흉"; });
-  제언.push("대운은 " + (good.length ? ranges(good) + " 구간이 용신 쪽" : "용신 쪽 구간이 뚜렷하지 않") +
-    (bad.length ? "이고, " + ranges(bad) + " 구간이 기신 쪽입니다." : "습니다.") +
-    " 대운이 바뀌는 앞뒤 한두 해는 변동이 몰리니 큰 결정을 피하십시오.");
+  // 구간마다 등급을 매기지 않고, 어느 구간에 무슨 기운이 들어오는지로 적는다
+  var good = a.daeun.list.filter(function(r){ return r.bearing.favor && !r.bearing.block; });
+  var bad  = a.daeun.list.filter(function(r){ return r.bearing.block && !r.bearing.favor; });
+  var yongIn = "용신 " + W[yong] + " 쪽 기운이 들어와 하려는 일이 순하게 풀";
+  var giIn   = "기신 " + W[ys.gi] + " 쪽 기운이 들어와 같은 일에도 힘이 더 듭니다.";
+  var duLine;
+  if (good.length && bad.length)
+    duLine = "대운은 " + ranges(good) + " 구간에 " + yongIn + "리고, " + ranges(bad) + " 구간에는 " + giIn;
+  else if (good.length)
+    duLine = "대운은 " + ranges(good) + " 구간에 " + yongIn + "립니다.";
+  else if (bad.length)
+    duLine = "대운은 " + ranges(bad) + " 구간에 " + giIn;
+  else
+    duLine = "대운은 용신 쪽으로도 기신 쪽으로도 크게 기울지 않아 흐름이 완만합니다.";
+  제언.push(duLine + " 대운이 바뀌는 앞뒤 한두 해는 변동이 몰리니 큰 결정을 피하십시오.");
   var gmHit = pos.filter(function(k){ return a.gongmang.indexOf(p[k].ji) >= 0; });
   if (gmHit.length)
     제언.push(gmHit.map(function(k){ return posKo[k] + "지"; }).join("·") +
@@ -536,7 +546,7 @@ function generate(a, S){
     var seGroup = SIP_GROUP[seSip];
     var age = y - birthYear + 1, du = null;
     a.daeun.list.forEach(function(r){ if (age >= r.from && age <= r.to) du = r; });
-    var luck = S.luckOf(gw, wxOf(yp.ji), ys);
+    var bear = S.unBearing(gw, wxOf(yp.ji), ys);
     var s = [];
     s.push(y + "년 " + yp.gan + yp.ji + "년에는 " + SE_EVENT[seGroup] + " 방면의 일이 앞에 놓입니다. 세운 천간 " +
       yp.gan + J(koOf(yp.gan), "이", "가") + " 일간에게 " + seSip + "(" + seGroup + ")이기 때문입니다.");
@@ -548,16 +558,17 @@ function generate(a, S){
       else if (GEUK[gw] === dgw) rel = "극(剋)하는 사이라 부딪히고";
       else rel = "극을 받는 사이라 눌리고";
       s.push("대운 " + du.gan + du.ji + J(koOf(du.ji), "과는", "와는") + " " + rel + ", 용신 " + W[yong] + " 기준 " +
-        (luck === "대길" || luck === "길" ? "길운이라 벌이고 매듭짓기 좋은 해입니다."
-         : luck === "평" ? "무난한 해라 준비와 정리에 알맞습니다."
-         : "기신운이라 확장보다 지키는 쪽이 맞습니다."));
+        (bear.favor && !bear.block ? "힘을 받는 해라 벌이고 매듭짓기에 알맞습니다."
+         : bear.block && !bear.favor ? "힘이 눌리는 해라 확장보다 지키는 쪽이 맞습니다."
+         : "밀고 당기는 기운이 섞인 해라 준비와 정리에 알맞습니다."));
     }
     var chung = S.interactWith(yp.gan, yp.ji, p).filter(function(x){ return /충/.test(x); });
     if (chung.length){
       var tgt = null;
       pos.forEach(function(k){ if (!tgt && chung[0].indexOf(p[k].ji) >= 1) tgt = k; });
       pos.forEach(function(k){ if (!tgt && chung[0].indexOf(p[k].gan) >= 1) tgt = k; });
-      s.push("특히 " + chung[0] + J(koOf(chung[0][1]), "이", "가") + " 걸려 " +
+      // 조사는 바로 앞 글자를 따른다 — '午子충' 뒤에는 지지가 아니라 '충'을 본다
+      s.push("특히 " + chung[0] + J(chung[0].slice(-1), "이", "가") + " 걸려 " +
         (tgt ? PILLAR_HIT[tgt] + " 쪽" : "그 방면") + " 변동을 살펴야 합니다.");
     }
     return s.join(" ").slice(0, 210);
@@ -574,9 +585,26 @@ function generate(a, S){
       kw.push(x === "역마" ? "이동" : x === "도화" ? "사람을 끄는 기운" : "혼자 파고듦");
   });
 
+  /* ═ 대운 구간별 한 줄 ═
+     길흉 등급을 걷어낸 자리를 채운다. 등급 두 글자 대신, 그 10년에 어느 방면이
+     앞에 서고 일간에게 무슨 기운으로 오는지 한 줄로 적는다. */
+  var duKw = a.daeun.list.map(function(r){
+    // 십성 칸이 이미 이름을 보여 주므로, 여기에는 그 십성이 무엇으로 오는지를 적는다
+    var key = (SIP[r.sipGan] || {}).key, grp = SIP_GROUP[r.sipGan];
+    var head = key ? key + " 쪽 일이 앞에 섭니다"
+             : grp ? GROUP_EFFECT[grp] + J(GROUP_EFFECT[grp], "이", "가") + " 앞에 섭니다"
+             : "흐름이 완만합니다";
+    var tail = r.bearing.favor && !r.bearing.block ? "용신 " + W[yong] + " 쪽이라 애쓴 만큼 남습니다"
+             : r.bearing.block && !r.bearing.favor ? "기신 " + W[ys.gi] + " 쪽이라 무리하면 탈이 납니다"
+             : r.bearing.favor ? "용신과 기신이 섞여 오르내립니다"
+             : "용신과 무관해 기복이 크지 않습니다";
+    return head + ". " + tail + ".";
+  });
+
   var out = {
     summary: fit(총평, 430),
     keywords: kw.slice(0, 6).join(", "),
+    duKw: duKw,
     temperament: fit(기질, 275),
     personality: fit(성격, 280),
     relation: fit(관계, 275),
@@ -679,7 +707,7 @@ function buildPrompt(a, S, draft){
   L.push("  형충회합   " + (a.relations.join(", ") || "없음"));
   L.push("  신살       " + (a.sinsal.join(", ") || "없음") + "  공망 " + a.gongmang.join(""));
   L.push("  대운       " + (a.daeun.forward ? "순행" : "역행") + " " + a.daeun.startAge + "세부터 — " +
-         a.daeun.list.map(function(r){ return r.from + "세 " + r.gan + r.ji + "(" + r.luck + ")"; }).join(", "));
+         a.daeun.list.map(function(r){ return r.from + "세 " + r.gan + r.ji + " " + r.sipGan + "·" + r.sipJi; }).join(", "));
   L.push("");
   if (draft){
     L.push("[이미 정리된 내용 — 되풀이하지 마십시오]");
