@@ -741,6 +741,124 @@ function yearPillar(year){
   return { gan: GAN[mod(i,10)], ji: JI[mod(i,12)] };
 }
 
+/* ── 월운 ────────────────────────────────────────────────────
+   한 해 열두 달의 월주. 달력 월이 아니라 절기가 가른다 — 寅월은 입춘에서
+   경칩까지다. 그래서 각 달의 시작을 태양황경으로 직접 구한다.
+   해의 경계도 입춘이므로, 입춘 전에 드는 寅월 앞자락은 지난해 간지를 쓴다. */
+var MONTH_TERM = ["입춘","경칩","청명","입하","망종","소서",
+                  "입추","백로","한로","입동","대설","소한"];
+function monthLuck(year, ilganIdx){
+  var out = [];
+  for (var k = 0; k < 12; k++){
+    var lon = mod360(315 + k * 30);
+    // k=0 은 입춘(315°), k=10 은 대설(255°), k=11 은 소한(285°) — 뒤 둘은 이듬해로 넘어간다
+    var guess = toJD(year, 2, 4, 12, 0, 0) + k * 30.44;
+    var jd = solarTermUT(guess, lon);
+    var d  = fromJD(jd + 9/24);                       // 한국 시각으로 보여 준다
+    var yi = mod(year - 1984, 60);
+    var yGan = GAN[mod(yi, 10)];
+    var inGan = mod(mod(GAN.indexOf(yGan), 5) * 2 + 2, 10);
+    out.push({
+      idx: k,
+      ji: JI[mod(2 + k, 12)],
+      gan: GAN[mod(inGan + k, 10)],
+      term: MONTH_TERM[k],
+      from: { y:d.y, m:d.m, d:d.d, hh:d.hh, mm:d.mm },
+      sipGan: sipseong(ilganIdx, mod(inGan + k, 10)),
+      sipJi:  sipseongOfJi(ilganIdx, JI[mod(2 + k, 12)])
+    });
+  }
+  return out;
+}
+
+/* ── 궁합 ────────────────────────────────────────────────────
+   두 명식을 나란히 놓고, 무엇이 서로 맞물리는지 사실만 모은다.
+   점수는 그 사실들을 세어 낸 것일 뿐 길흉 판정이 아니다. */
+function gunghap(a, b){
+  var pa = a.pillars, pb = b.pillars;
+  var facts = [], plus = 0, minus = 0;
+  function add(kind, where, text, w){
+    facts.push({ kind:kind, where:where, text:text, weight:w });
+    if (w > 0) plus += w; else minus += -w;
+  }
+  // 한자로 적어도 조사는 한글 읽기를 따른다 — 金은 '금'이라 '을', 水는 '수'라 '를'
+  function wxJ(w, withJong, without){
+    return WX_HANJA[w] + ("목금".indexOf(WX_KO[w]) >= 0 ? withJong : without);
+  }
+
+  // 일간끼리 — 두 사람의 본질이 만나는 자리
+  var ga = pa.il.gan, gb = pb.il.gan;
+  var hap = GAN_HAP[ga+gb] || GAN_HAP[gb+ga];
+  if (hap) add("합", "일간", ga + gb + " 천간합 → " + hap, 3);
+  else if (GAN_CHUNG.indexOf(ga+gb) >= 0 || GAN_CHUNG.indexOf(gb+ga) >= 0)
+    add("충", "일간", ga + gb + " 천간충", -3);
+  var wa = GAN_WX[GAN.indexOf(ga)], wb = GAN_WX[GAN.indexOf(gb)];
+  if (wa === wb) add("동", "일간", "두 일간이 같은 " + WX_HANJA[wa], 1);
+  else if (SAENG[wa] === wb) add("생", "일간", wxJ(wa,"이","가") + " " + wxJ(wb,"을","를") + " 생함 (본인이 상대를 밀어 줌)", 2);
+  else if (SAENG[wb] === wa) add("생", "일간", wxJ(wb,"이","가") + " " + wxJ(wa,"을","를") + " 생함 (상대가 본인을 밀어 줌)", 2);
+  else if (GEUK[wa] === wb) add("극", "일간", wxJ(wa,"이","가") + " " + wxJ(wb,"을","를") + " 극함 (본인이 상대를 누름)", -2);
+  else if (GEUK[wb] === wa) add("극", "일간", wxJ(wb,"이","가") + " " + wxJ(wa,"을","를") + " 극함 (상대가 본인을 누름)", -2);
+
+  // 일지끼리 — 배우자 자리가 맞물리는 방식
+  var ja = pa.il.ji, jb = pb.il.ji;
+  var yh = YUKHAP[ja+jb] || YUKHAP[jb+ja];
+  if (yh) add("합", "일지", ja + jb + " 육합 → " + yh, 3);
+  for (var s = 0; s < SAMHAP.length; s++){
+    var t = SAMHAP[s];
+    if (t.indexOf(ja) >= 0 && t.indexOf(jb) >= 0 && ja !== jb)
+      add("합", "일지", ja + jb + " 반합" + t[3], 3);
+  }
+  if (inPairs(JI_CHUNG, ja, jb)) add("충", "일지", ja + jb + " 충", -3);
+  if (inPairs(WONJIN, ja, jb))   add("원진", "일지", ja + jb + " 원진", -2);
+  if (inPairs(GWIMUN, ja, jb))   add("귀문", "일지", ja + jb + " 귀문", -1);
+  if (inPairs(HAE, ja, jb))      add("해", "일지", ja + jb + " 해", -1);
+  if (inPairs(PA, ja, jb))       add("파", "일지", ja + jb + " 파", -1);
+  if (ja === jb)                 add("동", "일지", "일지가 " + ja + "로 같음", 1);
+
+  // 띠(연지)끼리 — 집안과 바깥에서 보는 자리
+  var na = pa.nyeon.ji, nb = pb.nyeon.ji;
+  if (inPairs(JI_CHUNG, na, nb)) add("충", "연지", na + nb + " 충 (띠 충)", -1);
+  else {
+    var ny = YUKHAP[na+nb] || YUKHAP[nb+na];
+    if (ny) add("합", "연지", na + nb + " 육합 (띠 합)", 1);
+    for (var s2 = 0; s2 < SAMHAP.length; s2++){
+      var t2 = SAMHAP[s2];
+      if (t2.indexOf(na) >= 0 && t2.indexOf(nb) >= 0 && na !== nb)
+        add("합", "연지", na + nb + " 반합 (띠 삼합)", 1);
+    }
+  }
+
+  // 용신을 서로 채워 주는가 — 궁합에서 가장 무겁게 보는 대목
+  function fills(one, two, who){
+    var sc = two.profile.scores;
+    var need = one.yongsin.yong, hui = one.yongsin.hui, gi = one.yongsin.gi;
+    if (sc[need] >= 25) add("용신", who, wxJ(need,"이","가") + " " + sc[need] + "점으로 " + who + " 용신을 채워 줌", 4);
+    else if (sc[hui] >= 25) add("용신", who, wxJ(hui,"이","가") + " " + sc[hui] + "점으로 " + who + " 희신을 채워 줌", 2);
+    if (sc[gi] >= 50) add("기신", who, wxJ(gi,"이","가") + " " + sc[gi] + "점으로 " + who + " 기신을 더 키움", -2);
+  }
+  fills(a, b, "본인");
+  fills(b, a, "상대");
+
+  // 서로의 빈 오행을 메우는가
+  var missA = [], missB = [];
+  for (var w = 0; w < 5; w++){
+    if (a.profile.counts[w] === 0 && b.profile.counts[w] > 0) missA.push(WX_HANJA[w]);
+    if (b.profile.counts[w] === 0 && a.profile.counts[w] > 0) missB.push(WX_HANJA[w]);
+  }
+  if (missA.length) add("보완", "본인", "본인에게 없는 " + missA.join("·") + "를 상대가 가짐", missA.length);
+  if (missB.length) add("보완", "상대", "상대에게 없는 " + missB.join("·") + "를 본인이 가짐", missB.length);
+
+  // 상대의 일간이 나에게 무슨 십성인가 — 관계의 성격을 가른다
+  var sipAB = sipseong(a.chart.ilganIdx, GAN.indexOf(gb));
+  var sipBA = sipseong(b.chart.ilganIdx, GAN.indexOf(ga));
+
+  var total = plus + minus;
+  var score = total ? Math.round(plus / total * 100) : 50;
+  return { facts:facts, plus:plus, minus:minus, score:score,
+           sipAB:sipAB, sipBA:sipBA,
+           ilgan:{ a:ga, b:gb }, ilji:{ a:ja, b:jb } };
+}
+
 /* ── 전체 분석 ───────────────────────────────────────────── */
 function analyze(input){
   var chart = computeChart(input);
@@ -808,6 +926,7 @@ return {
   SIBI_SINSAL:SIBI_SINSAL, sibiSinsal:sibiSinsal, twelveSinsal:twelveSinsal,
   HONGYEOM:HONGYEOM, CHEONEUL:CHEONEUL, BAEKHO:BAEKHO, GWAEGANG:GWAEGANG,
   lunarDate:lunarDate, yearPillar:yearPillar, unBearing:unBearing, REMEDY:REMEDY,
+  monthLuck:monthLuck, gunghap:gunghap, MONTH_TERM:MONTH_TERM,
   JI_GROUP:JI_GROUP, groupOf:groupOf, gradeOf:gradeOf, specials:specials,
   interactWith:interactWith
 };

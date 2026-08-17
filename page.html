@@ -124,6 +124,9 @@ body{
   box-shadow:0 1px 3px rgba(0,0,0,.13), 0 10px 30px rgba(0,0,0,.10);
   display:flex; flex-direction:column;
 }
+/* .page 의 display:flex 가 [hidden] 의 display:none 을 눌러 버린다 —
+   같은 굵기라 뒤에 온 쪽이 이긴다. 숨긴 면(궁합)이 인쇄에 딸려 나오던 원인이다. */
+.page[hidden]{display:none}
 .page-no{
   position:absolute; left:0; right:0; bottom:6mm;
   text-align:center; font-size:7pt; letter-spacing:.22em; color:var(--ink-3);
@@ -345,6 +348,40 @@ input[type="range"].f:focus-visible::-moz-range-thumb{outline:2px solid var(--ac
    다 들어가지 않아 잘려 나가던 것을 막는다. 넓은 화면에서는 그대로 한 줄이다. */
 .daeun td.kw .f{text-align:left; font-size:7.6pt; line-height:1.45; color:var(--ink-2)}
 .daeun td.cur{box-shadow:inset 0 0 0 2px var(--accent)}
+
+/* ---------- 월운 ----------
+   해석 없이 자료만 편다. 열두 칸이 한 줄에 들어가야 하므로 글자를 잘게 쓴다. */
+.wolun{width:100%; border-collapse:collapse; table-layout:fixed}
+.wolun th,.wolun td{border:1px solid var(--rule); padding:2px 1px; text-align:center}
+.wolun thead th{
+  background:var(--panel); font-size:6.6pt; font-weight:500; color:var(--ink-2);
+  letter-spacing:.04em; padding:3px 1px;
+}
+.wolun td.lbl{
+  background:var(--panel); font-size:6.6pt; color:var(--ink-2);
+  text-align:right; padding-right:4px; white-space:nowrap; width:13mm;
+}
+.wolun .gz{font-family:var(--f-serif); font-size:11.5pt; line-height:1.15; letter-spacing:.02em}
+.wolun .sm{font-size:6.6pt; color:var(--ink-2); line-height:1.3}
+.wolun .dt{font-size:6.2pt; color:var(--ink-3); font-variant-numeric:tabular-nums}
+.wolun td.now{box-shadow:inset 0 0 0 2px var(--accent)}
+.wolun-foot{font-size:6.8pt; color:var(--ink-3); margin-top:3px}
+
+/* ---------- 궁합 ---------- */
+.ghtab{width:100%; border-collapse:collapse; table-layout:fixed}
+.ghtab th,.ghtab td{border:1px solid var(--rule); padding:3px 4px; text-align:center}
+.ghtab thead th{background:var(--panel); font-size:6.9pt; font-weight:500; color:var(--ink-2); letter-spacing:.08em}
+.ghtab td.who{background:var(--panel); font-size:7.6pt; text-align:left; width:24mm; white-space:nowrap}
+.ghtab td.who b{font-weight:600}
+.ghtab td.who span{display:block; font-size:6.6pt; color:var(--ink-3)}
+.ghtab .gz{font-family:var(--f-serif); font-size:13pt; letter-spacing:.04em}
+.ghtab .sm{font-size:7.2pt; color:var(--ink-2)}
+.gh-score{display:flex; align-items:center; gap:8px; margin-top:4px}
+.gh-track{position:relative; flex:1; height:9px; background:var(--panel-2); border-radius:2px; overflow:hidden}
+.gh-fill{position:absolute; inset:0 auto 0 0; background:var(--accent); border-radius:2px; width:0}
+.gh-num{font-size:8.4pt; font-variant-numeric:tabular-nums; color:var(--ink-2); min-width:52px; text-align:right}
+.chip.gh-plus{border-color:var(--st-good); color:var(--st-good)}
+.chip.gh-minus{border-color:var(--seal); color:var(--seal)}
 
 /* ---------- 개운법 ---------- */
 .remedy{display:grid; grid-template-columns:repeat(5,1fr); gap:7px}
@@ -825,9 +862,29 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
     <button type="button" class="btn" id="bDraft" style="padding:7px 14px">해석 초안</button>
     <button type="button" class="btn" id="bBoard" style="padding:7px 14px">명식판</button>
     <button type="button" class="btn" id="bAi" style="padding:7px 14px">AI 보완</button>
+    <button type="button" class="btn" id="bMate" style="padding:7px 14px">궁합</button>
   </div>
   <div class="calc-out" id="calcOut" hidden></div>
   <div class="legend">계산 결과는 초안입니다. 모든 칸은 그대로 고쳐 쓸 수 있고, 고친 칸은 밑줄 표시가 사라집니다.</div>
+</div>
+
+<div class="panel no-print" id="matePanel" hidden>
+  <h3>궁합 — 상대의 생년월일시</h3>
+  <div class="pgrid">
+    <div class="fld w-name"><label for="mName">상대 성명</label>
+      <input id="mName" type="text" placeholder="이름"></div>
+    <div class="fld"><label for="mSex">성별</label>
+      <select id="mSex"><option value="F">여 · 곤명</option><option value="M">남 · 건명</option></select></div>
+    <div class="fld w-date"><label for="mDate">양력 생년월일</label>
+      <input id="mDate" type="date"></div>
+    <div class="fld w-time"><label for="mTime">출생시각</label>
+      <input id="mTime" type="time"></div>
+    <div class="chk"><input type="checkbox" id="mNoTime"><label for="mNoTime">시각 모름</label></div>
+    <button type="button" class="btn btn-primary" id="bMateCalc" style="padding:7px 16px">궁합 보기</button>
+    <button type="button" class="btn" id="bMateClear" style="padding:7px 14px">상대 지우기</button>
+  </div>
+  <div class="calc-out" id="mateOut" hidden></div>
+  <div class="legend">상대를 넣으면 감정서 끝에 궁합 면이 한 장 더 붙습니다. 지우면 다시 빠집니다.</div>
 </div>
 
 <div class="panel no-print" id="boardPanel" hidden>
@@ -1144,16 +1201,51 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
   <div class="overflow-flag">내용이 지면을 넘칩니다</div>
 </section>
 
-<!-- ══════════════════ 3면 · 운의 흐름과 제언 ══════════════════ -->
+<!-- ══════════════════ 3면 · 구조가 만드는 작용 ══════════════════ -->
 <section class="page" id="page3">
   <div class="stack">
 
     <header class="sheet-head" style="border-bottom-width:1px">
-      <h1 style="font-size:13pt">운의 흐름과 제언<span class="hanja">大運·歲運·開運</span></h1>
+      <h1 style="font-size:13pt">구조가 만드는 작용<span class="hanja">支藏干·合沖·神殺</span></h1>
+      <div class="head-meta"><div><b>의뢰인</b><span id="echoName3" style="font-size:8.6pt">—</span></div></div>
+    </header>
+
+    <!-- 12. 지장간과 용신 -->
+    <div class="sec">
+      <div class="sec-h"><h2>지장간과 용신</h2><span class="hj">支藏干</span></div>
+      <div class="prose"><textarea class="f" rows="9" data-k="hidden"
+        placeholder="지지 안에 숨은 글자를 펴고, 용신이 어디에 있는지 짚습니다."></textarea></div>
+    </div>
+
+    <!-- 13. 합·충이 바꾸는 것 -->
+    <div class="sec">
+      <div class="sec-h"><h2>합·충이 바꾸는 것</h2><span class="hj">合沖會局</span></div>
+      <div class="prose"><textarea class="f" rows="10" data-k="combine"
+        placeholder="삼합·반합·천간합·충이 무엇을 만들고, 그것이 일간에게 어떻게 오는지 씁니다."></textarea></div>
+    </div>
+
+    <!-- 14. 신살이 말하는 것 -->
+    <div class="sec grow">
+      <div class="sec-h"><h2>신살이 말하는 것</h2><span class="hj">神殺</span></div>
+      <div class="prose"><textarea class="f" rows="10" data-k="sinsalRead"
+        placeholder="어떤 장면으로 나타나는지 먼저 쓰고, 어느 글자에서 나오는지 붙입니다."></textarea></div>
+    </div>
+
+  </div>
+  <div class="page-no">3 / 4 · 구조가 만드는 작용</div>
+  <div class="overflow-flag">내용이 지면을 넘칩니다</div>
+</section>
+
+<!-- ══════════════════ 4면 · 운의 흐름과 제언 ══════════════════ -->
+<section class="page" id="page4">
+  <div class="stack">
+
+    <header class="sheet-head" style="border-bottom-width:1px">
+      <h1 style="font-size:13pt">운의 흐름과 제언<span class="hanja">大運·歲運·月運</span></h1>
       <div class="head-meta"><div><b>의뢰인</b><span id="echoName2" style="font-size:8.6pt">—</span></div></div>
     </header>
 
-    <!-- 12. 대운 -->
+    <!-- 15. 대운 -->
     <div class="sec">
       <div class="sec-h"><h2>대운</h2><span class="hj">大運 · 10년</span></div>
       <table class="daeun">
@@ -1188,15 +1280,64 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
       </div>
     </div>
 
-    <!-- 14. 종합 제언 -->
+    <!-- 17. 월운 — 올해 열두 달, 자료만 -->
     <div class="sec">
+      <div class="sec-h"><h2>월운</h2><span class="hj">月運 · <span id="wolYear">올해</span></span></div>
+      <table class="wolun">
+        <thead><tr id="wolHead"></tr></thead>
+        <tbody id="wolBody"></tbody>
+      </table>
+      <div class="wolun-foot">달의 경계는 달력이 아니라 절기를 따릅니다 — 표의 날짜가 그 달이 드는 시각입니다.</div>
+    </div>
+
+    <!-- 18. 종합 제언 -->
+    <div class="sec grow">
       <div class="sec-h"><h2>종합 제언</h2><span class="hj">提言</span></div>
-      <div class="prose"><textarea class="f" rows="14" data-k="advice"
+      <div class="prose"><textarea class="f" rows="11" data-k="advice"
         placeholder="의뢰인이 가져갈 결론을 씁니다. 사주가 정한 것과 선택으로 바꿀 수 있는 것을 구분해 주면 상담의 만족도가 올라갑니다."></textarea></div>
     </div>
 
   </div>
-  <div class="page-no">3 / 3 · 운의 흐름과 제언</div>
+  <div class="page-no">4 / 4 · 운의 흐름과 제언</div>
+  <div class="overflow-flag">내용이 지면을 넘칩니다</div>
+</section>
+
+<!-- ══════════════════ 5면 · 궁합 (상대를 넣었을 때만) ══════════════════ -->
+<section class="page" id="page5" hidden>
+  <div class="stack">
+
+    <header class="sheet-head" style="border-bottom-width:1px">
+      <h1 style="font-size:13pt">궁합<span class="hanja">宮合</span></h1>
+      <div class="head-meta"><div><b>의뢰인</b><span id="echoName4" style="font-size:8.6pt">—</span></div></div>
+    </header>
+
+    <!-- 19. 두 명식 -->
+    <div class="sec">
+      <div class="sec-h"><h2>두 사람의 명식</h2><span class="hj">兩命式</span></div>
+      <table class="ghtab">
+        <thead><tr><th></th><th>년주</th><th>월주</th><th>일주</th><th>시주</th>
+          <th style="width:26mm">일간</th><th style="width:30mm">용신 · 기신</th></tr></thead>
+        <tbody id="ghBody"></tbody>
+      </table>
+    </div>
+
+    <!-- 20. 맞물리는 자리 -->
+    <div class="sec">
+      <div class="sec-h"><h2>맞물리는 자리</h2><span class="hj">相互作用</span></div>
+      <div class="chipfield"><div class="chips" id="chips-gh"></div>
+        <input class="f chipinput" data-k="gh.facts" data-chips="chips-gh"
+               placeholder="일간·일지·용신이 서로 어떻게 걸리는지 (쉼표 구분)"></div>
+    </div>
+
+    <!-- 21. 궁합 풀이 -->
+    <div class="sec grow">
+      <div class="sec-h"><h2>궁합 풀이</h2><span class="hj">解說</span></div>
+      <div class="prose"><textarea class="f" rows="16" data-k="gh.text"
+        placeholder="두 사람이 서로에게 무엇을 채워 주고 무엇을 건드리는지 씁니다."></textarea></div>
+    </div>
+
+  </div>
+  <div class="page-no">5 / 5 · 궁합</div>
   <div class="overflow-flag">내용이 지면을 넘칩니다</div>
 </section>
 
@@ -1398,10 +1539,12 @@ function openClient(id){
   db.activeId = id;
   var c = current(); if(!c) return;
   clearAllFields();
-  writeAll(c.fields || {});
-  writeBirth(c.birth || {});
-  g("aiOut").value = c.ai || "";
+  // writeAll 끝에서 문서를 다시 그리므로, 그 전에 생년월일·상대 칸을 채우고
+  // 이전 의뢰인의 계산 결과를 비운다. 순서가 바뀌면 월운·궁합이 빈 채로 그려진다.
   lastAnalysis = null; lastDraft = null;
+  writeBirth(c.birth || {});
+  writeAll(c.fields || {});
+  g("aiOut").value = c.ai || "";
   if (!g("boardPanel").hidden) renderBoard();
   persist(); renderClientBar(); renderClientList();
   note.textContent = "불러옴";
@@ -1618,11 +1761,123 @@ function renderScale(){
   document.getElementById("scaleMark").style.left = v + "%";
 }
 
+/* ── 궁합 ────────────────────────────────────────────────────
+   상대를 넣었을 때만 다섯째 면이 붙는다. 점수는 맞물리는 자리를 세어 낸 값일 뿐
+   길흉 판정이 아니므로, 무엇이 맞물렸는지를 함께 펼쳐 둔다. */
+var lastMate = null, lastGh = null;
+
+/* 저장해 둔 의뢰인을 다시 열면 문서의 글자는 되살아나지만 계산 결과(lastAnalysis)는
+   비어 있다. 월운표와 궁합면은 그 계산 결과가 있어야 그려지므로, 생년월일이 남아
+   있으면 조용히 다시 세운다. 문서의 어떤 칸도 건드리지 않는다. */
+function ensureAnalysis(){
+  if (lastAnalysis || typeof Saju === "undefined") return lastAnalysis;
+  if (!iDate.value) return null;
+  var dp = iDate.value.split("-").map(Number);
+  var noT = iNoTime.checked || !iTime.value;
+  var tp = noT ? [12,0] : iTime.value.split(":").map(Number);
+  try {
+    lastAnalysis = Saju.analyze({ y:dp[0], m:dp[1], d:dp[2], hour:tp[0], min:tp[1],
+      sex:iSex.value, lon:FIXED_LON, tstMode:FIXED_TST, jasi:iJasi.value });
+  } catch(e){ lastAnalysis = null; }
+  return lastAnalysis;
+}
+
+function mateAnalysis(){
+  var m = readMate();
+  if (typeof Saju === "undefined" || !m.date) return null;
+  var dp = m.date.split("-").map(Number);
+  var noT = m.noTime || !m.time;
+  var tp = noT ? [12,0] : m.time.split(":").map(Number);
+  try {
+    return Saju.analyze({ y:dp[0], m:dp[1], d:dp[2], hour:tp[0], min:tp[1],
+                          sex:m.sex, lon:FIXED_LON, tstMode:FIXED_TST, jasi:iJasi.value });
+  } catch(e){ return null; }
+}
+function renderGunghap(){
+  var page = g("page5"); if(!page) return;
+  var m = readMate();
+  ensureAnalysis();
+  var B = (lastAnalysis && m.date) ? mateAnalysis() : null;
+  lastMate = B;
+  if (!lastAnalysis || !B){ page.hidden = true; lastGh = null; renumberPages(); return; }
+
+  var gh = Saju.gunghap(lastAnalysis, B);
+  lastGh = gh;
+  page.hidden = false;
+  renumberPages();
+
+  var POS = ["nyeon","wol","il","si"];
+  function row(who, sub, an){
+    var p = an.pillars;
+    return '<tr><td class="who"><b>' + esc(who) + "</b><span>" + esc(sub) + "</span></td>" +
+      POS.map(function(k){
+        return '<td><span class="gz' + wxCls(p[k].gan) + '">' + p[k].gan + '</span>' +
+               '<span class="gz' + wxCls(p[k].ji) + '">' + p[k].ji + "</span></td>"; }).join("") +
+      '<td><span class="gz">' + p.il.gan + '</span><span class="sm"><br>' +
+        Saju.WX_KO[Saju.GAN_WX[Saju.GAN.indexOf(p.il.gan)]] + "</span></td>" +
+      '<td><span class="sm">' + Saju.WX_HANJA[an.yongsin.yong] + " · " +
+        Saju.WX_HANJA[an.yongsin.gi] + "</span></td></tr>";
+  }
+  var myName = (document.querySelector('[data-k="c.name"]').value || "본인").trim() || "본인";
+  g("ghBody").innerHTML =
+    row(myName, "본인", lastAnalysis) +
+    row(m.name || "상대", "상대", B);
+
+  setAuto("gh.facts", gh.facts.map(function(f){ return f.text; }).join(", "));
+  if (typeof Interpret !== "undefined" && Interpret.gunghapText)
+    setAuto("gh.text", Interpret.gunghapText(lastAnalysis, B, gh, Saju, myName, m.name || "상대"));
+}
+// 궁합 면이 붙고 빠짐에 따라 쪽번호를 다시 매긴다
+function renumberPages(){
+  var pages = [].slice.call(document.querySelectorAll(".page")).filter(function(p){ return !p.hidden; });
+  var n = pages.length;
+  pages.forEach(function(p, i){
+    var el = p.querySelector(".page-no");
+    if(!el) return;
+    var title = (el.textContent.split("·")[1] || "").trim();
+    el.textContent = (i+1) + " / " + n + " · " + title;
+  });
+}
+
+/* ── 월운 — 올해 열두 달, 해석 없이 자료만 ────────────────────
+   달의 경계는 달력이 아니라 절기다. 표에 드는 날짜를 함께 적어 두어야
+   '몇 월생'이 아니라 '어느 절기부터'인지 헷갈리지 않는다. */
+function renderWolun(a){
+  var head = g("wolHead"), body = g("wolBody");
+  if(!head || !body) return;
+  if(!a || typeof Saju === "undefined"){ head.innerHTML = ""; body.innerHTML = ""; return; }
+  var y = new Date().getFullYear();
+  var list = Saju.monthLuck(y, a.chart.ilganIdx);
+  var lbl = g("wolYear"); if(lbl) lbl.textContent = y + "년";
+
+  var now = new Date(), cur = -1;
+  for (var i = 0; i < 12; i++){
+    var f = list[i].from, st = new Date(f.y, f.m - 1, f.d, f.hh, f.mm);
+    var nx = (i < 11) ? (function(n){ return new Date(n.y, n.m - 1, n.d, n.hh, n.mm); })(list[i+1].from)
+                      : new Date(f.y + 1, 1, 1);
+    if (now >= st && now < nx) cur = i;
+  }
+  head.innerHTML = "<th></th>" + list.map(function(m){
+    return "<th>" + m.term + "</th>"; }).join("");
+  function row(cls, label, cell){
+    return '<tr><td class="lbl">' + label + "</td>" +
+      list.map(function(m, i){
+        return '<td class="' + (i === cur ? "now" : "") + '">' + cell(m) + "</td>"; }).join("") + "</tr>";
+  }
+  body.innerHTML =
+    row("", "간지", function(m){ return '<span class="gz">' + m.gan + "<br>" + m.ji + "</span>"; }) +
+    row("", "십성", function(m){ return '<span class="sm">' + m.sipGan + "<br>" + m.sipJi + "</span>"; }) +
+    row("", "드는 때", function(m){
+      return '<span class="dt">' + String(m.from.m) + "/" + m.from.d + "<br>" +
+        String(m.from.hh).padStart(2,"0") + ":" + String(m.from.mm).padStart(2,"0") + "</span>"; });
+}
+
 function renderEchoes(){
   var name = (document.querySelector('[data-k="c.name"]').value || "").trim();
   var date = (document.querySelector('[data-k="meta.date"]').value || "").trim();
-  document.getElementById("echoName").textContent  = name || "—";
-  document.getElementById("echoName2").textContent = name || "—";
+  ["echoName","echoName2","echoName3","echoName4"].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.textContent = name || "—";
+  });
 
   var y = parseInt((date.match(/\d{4}/) || [])[0], 10);
   if(isFinite(y)){
@@ -1636,6 +1891,8 @@ function checkOverflow(){
   document.querySelectorAll(".page").forEach(function(pg){
     var inner = pg.querySelector(".stack");
     if(!inner) return;
+    // 숨긴 면(상대를 넣지 않았을 때의 궁합면)은 높이가 0이라 늘 넘침으로 잡힌다
+    if(pg.hidden){ pg.classList.remove("is-over"); return; }
     var avail = pg.clientHeight
       - parseFloat(getComputedStyle(pg).paddingTop)
       - parseFloat(getComputedStyle(pg).paddingBottom);
@@ -1645,11 +1902,15 @@ function checkOverflow(){
 
 function refreshAll(){
   fields.forEach(function(el){ autoGrow(el); });
+  // 궁합이 '맞물리는 자리' 칸을 채우므로 칩보다 먼저 돌아야 한다
+  ensureAnalysis();
+  renderGunghap();
   renderChips();
   renderWuxing();
   renderSipseong();
   renderScale();
   renderEchoes();
+  renderWolun(ensureAnalysis());
   checkOverflow();
 }
 
@@ -1726,7 +1987,7 @@ function saveBirth(){
 }
 function readBirth(){
   return { name:iName.value, sex:iSex.value, date:iDate.value, time:iTime.value,
-           noTime:iNoTime.checked, jasi:iJasi.value };
+           noTime:iNoTime.checked, jasi:iJasi.value, mate:readMate() };
 }
 function writeBirth(b){
   b = b || {};
@@ -1734,6 +1995,18 @@ function writeBirth(b){
   iDate.value = b.date || "";  iTime.value = b.time || "";
   iNoTime.checked = !!b.noTime; iTime.disabled = !!b.noTime;
   iJasi.value = b.jasi || "early";
+  writeMate(b.mate || {});
+}
+// 궁합 상대도 의뢰인 기록에 함께 담긴다 — 사람마다 상대가 다르므로
+function readMate(){
+  return { name:g("mName").value, sex:g("mSex").value, date:g("mDate").value,
+           time:g("mTime").value, noTime:g("mNoTime").checked };
+}
+function writeMate(m){
+  m = m || {};
+  g("mName").value = m.name || ""; g("mSex").value = m.sex || "F";
+  g("mDate").value = m.date || ""; g("mTime").value = m.time || "";
+  g("mNoTime").checked = !!m.noTime; g("mTime").disabled = !!m.noTime;
 }
 
 /* ── 자동 계산 ─────────────────────────────────────────────── */
@@ -2013,7 +2286,8 @@ g("bDraft").addEventListener("click", function(){
     alert("해석 엔진을 불러오지 못했습니다. 파일이 온전한지 확인해 주십시오."); return;
   }
   if (!lastAnalysis){ alert("먼저 자동 계산을 눌러 주십시오."); return; }
-  var written = ["summary","temperament","p.personality","p.relation","p.career","p.wealth","p.health","advice"]
+  var written = ["summary","temperament","p.personality","p.relation","p.career","p.wealth","p.health","advice",
+                 "hidden","combine","sinsalRead"]
     .some(function(k){ var el = document.querySelector('[data-k="'+k+'"]'); return el && el.value.trim(); });
   if (written && !confirm("이미 쓰신 해석 문장이 있습니다. 초안으로 덮어쓸까요?")) return;
 
@@ -2028,6 +2302,9 @@ g("bDraft").addEventListener("click", function(){
   setAuto("p.wealth", d.wealth);
   setAuto("p.health", d.health);
   setAuto("advice", d.advice);
+  setAuto("hidden", d.hidden);
+  setAuto("combine", d.combine);
+  setAuto("sinsalRead", d.sinsalRead);
   setAuto("se.thisTxt", d.seThis);
   setAuto("se.nextTxt", d.seNext);
   (d.duKw || []).forEach(function(t, i){ setAuto("du." + i + ".kw", t); });
@@ -2047,6 +2324,32 @@ g("bBoard").addEventListener("click", function(){
   if (!b.hidden) renderBoard();
 });
 g("bAi").addEventListener("click", function(){ g("aiPanel").hidden = !g("aiPanel").hidden; });
+g("bMate").addEventListener("click", function(){ g("matePanel").hidden = !g("matePanel").hidden; });
+g("mNoTime").addEventListener("change", function(){ g("mTime").disabled = this.checked; });
+g("bMateCalc").addEventListener("click", function(){
+  var out = g("mateOut");
+  if (!lastAnalysis){ alert("먼저 의뢰인의 자동 계산을 눌러 주십시오."); return; }
+  if (!g("mDate").value){ alert("상대의 양력 생년월일을 입력해 주십시오."); g("mDate").focus(); return; }
+  refreshAll(); save();   // refreshAll 이 궁합·칩을 함께 다시 그린다
+  out.hidden = false;
+  if (!lastGh){ out.innerHTML = '<span class="warn">상대의 명식을 세우지 못했습니다. 날짜를 확인해 주십시오.</span>'; return; }
+  var p = lastMate.pillars;
+  out.innerHTML = '<div>상대 명식 <span class="gz">' +
+    ["nyeon","wol","il","si"].map(function(k){ return p[k].gan + p[k].ji; }).join(" ") +
+    '</span> · 맞물리는 자리 ' + lastGh.facts.length + '곳 (돕는 쪽 ' + lastGh.plus +
+    ', 부딪히는 쪽 ' + lastGh.minus + ')</div>' +
+    '<div class="gh-score"><div class="gh-track"><div class="gh-fill" style="width:' +
+    lastGh.score + '%"></div></div><span class="gh-num">' + lastGh.score + ' / 100</span></div>' +
+    '<div style="margin-top:4px">감정서 끝에 <b>궁합 면</b>이 한 장 붙었습니다.</div>';
+  setTimeout(checkOverflow, 0);
+});
+g("bMateClear").addEventListener("click", function(){
+  writeMate({}); g("mateOut").hidden = true;
+  ["gh.facts","gh.text"].forEach(function(k){
+    var el = document.querySelector('[data-k="' + k + '"]'); if(el) el.value = "";
+  });
+  refreshAll(); save(); setTimeout(checkOverflow, 0);
+});
 g("aiOut").addEventListener("input", function(){
   var c = current(); if (!c) return;
   c.ai = g("aiOut").value; c.updatedAt = nowISO(); persist();
@@ -2150,7 +2453,11 @@ g("bPrint").addEventListener("click", function(){
   setMode(true); setTimeout(function(){ window.print(); }, 60);
 });
 g("bPanel").addEventListener("click", function(){
-  var p = g("calcPanel"); p.hidden = !p.hidden; setTimeout(checkOverflow, 0);
+  var p = g("calcPanel"); p.hidden = !p.hidden;
+  // 궁합·명식판·AI 패널을 여는 단추가 이 패널 안에 있다. 이 패널을 접으면
+  // 그 단추도 함께 사라지므로, 딸린 패널을 열어 둔 채 가두지 않는다.
+  if (p.hidden) ["matePanel","boardPanel","aiPanel"].forEach(function(id){ g(id).hidden = true; });
+  setTimeout(checkOverflow, 0);
 });
 
 // 좁은 화면에서 툴바 뒷줄을 접어 두는 ☰
@@ -2315,7 +2622,7 @@ function tryUnlock(){
         if(!Object.keys(db.clients || {}).length) createClient("새 의뢰인");
         if(!db.activeId || !db.clients[db.activeId]) db.activeId = Object.keys(db.clients)[0];
         var c = current();
-        writeAll(c.fields || {}); writeBirth(c.birth || {});
+        writeBirth(c.birth || {}); writeAll(c.fields || {});
         g("aiOut").value = c.ai || "";
         g("aiKey").value = db.aiKey || ""; g("aiModel").value = db.aiModel || "gpt-4o";
         lockScreen.hidden = true;
@@ -2395,8 +2702,8 @@ document.addEventListener("keydown", function(e){
   if(!state || !Object.keys(db.clients).length){ createClient("새 의뢰인"); }
   if(!db.activeId || !db.clients[db.activeId]) db.activeId = Object.keys(db.clients)[0];
   var c = current();
-  writeAll(c.fields || {});
   writeBirth(c.birth || {});
+  writeAll(c.fields || {});
   g("aiOut").value = c.ai || "";
   g("aiKey").value = db.aiKey || ""; g("aiModel").value = db.aiModel || "gpt-4o";
   persist(); renderClientBar(); renderClientList(); renderLockBtn();
