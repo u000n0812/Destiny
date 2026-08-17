@@ -105,6 +105,14 @@ body{
 .seg button[aria-pressed="true"]{background:var(--accent); color:var(--paper)}
 .seg button:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
 .savenote{font-size:7.6pt; color:var(--ink-3); letter-spacing:.02em; min-width:74px}
+/* 넓은 화면에서는 묶음이 없는 셈 치고 툴바에 그대로 늘어선다 */
+.tb-more{display:contents}
+.tb-menu{display:none}
+.tb-scrim{display:none}
+.sr-only{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
 
 /* ---------- 지면 ---------- */
 #doc{display:flex; flex-direction:column; align-items:center; gap:18px; padding:22px 14px 60px}
@@ -231,6 +239,7 @@ select.f{-webkit-appearance:none; appearance:none; cursor:pointer; padding-right
   background:var(--panel);
 }
 .chip.on-seal{border-color:var(--seal); color:var(--seal)}
+.chip.chip-none{border-style:dashed; color:var(--ink-3); background:transparent}
 .chips:empty{display:none}
 .mode-view .chipinput, .chips-hasitems + .chipinput{}
 
@@ -389,13 +398,6 @@ input[type="range"].f:focus-visible::-moz-range-thumb{outline:2px solid var(--ac
   .luckpick[data-luck="평"]{border-color:var(--st-mid)}
   .luckpick[data-luck="흉"],.luckpick[data-luck="대흉"]{border-color:var(--st-bad)}
 }
-/* screen 한정 — A4 인쇄 폭(약 794px)이 이 조건에 걸려 지면 높이를 무너뜨리는 것을 막는다 */
-@media screen and (max-width:900px){
-  .page{width:100%; height:auto; min-height:0; padding:16px}
-  .cards{grid-template-columns:repeat(2,1fr)}
-  .remedy{grid-template-columns:repeat(2,1fr)}
-  .row-2,.row-2u{grid-template-columns:1fr}
-}
 @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
 
 /* ══════ 작업 공간 (화면 전용) ══════ */
@@ -552,6 +554,204 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
 }
 #aiOut:focus{outline:2px solid var(--accent); outline-offset:-1px}
 .srcline{font-size:7.2pt; color:var(--ink-3); margin-top:6px; line-height:1.6}
+
+/* ══════════════════════════════════════════════════════════
+   좁은 화면 규칙은 스타일시트 맨 끝에 둔다.
+   앞쪽에 두면 뒤에 오는 같은 굵기의 규칙(.drop, .panel, .btn …)에
+   조용히 덮여 일부만 먹는다. 마지막에 두어야 전부 적용된다.
+   ══════════════════════════════════════════════════════════ */
+/* ---------- 좁은 화면 ----------
+   screen 한정이다. A4 인쇄 폭(약 794px)이 이 조건에 걸려 지면 높이를 무너뜨리는 것을 막는다.
+   여기서는 A4 틀을 버리고 위에서 아래로 흐르는 문서로 바꾼다. 인쇄 결과는 건드리지 않는다. */
+@media screen and (max-width:900px){
+  .page{width:100%; height:auto; min-height:0; padding:16px}
+  .cards{grid-template-columns:repeat(2,1fr)}
+  .remedy{grid-template-columns:repeat(2,1fr)}
+  .row-2,.row-2u{grid-template-columns:1fr}
+  .row-2u{gap:9px}
+}
+
+@media screen and (max-width:680px){
+  /* ── 툴바를 한 줄로 접는다 ── */
+  .toolbar{
+    flex-wrap:nowrap; gap:6px; padding:7px 10px;
+    padding-left:max(10px, env(safe-area-inset-left));
+    padding-right:max(10px, env(safe-area-inset-right));
+  }
+  /* 문서 안에 제목이 다시 나오므로 좁은 화면에서는 툴바 제목을 접는다.
+     여기서 자리를 비워야 의뢰인 이름이 읽을 만한 너비를 얻는다. */
+  .tb-title{display:none}
+  .client-pick{flex:1 1 auto; min-width:84px}
+  .btn-client{width:100%; min-width:0; max-width:none; overflow:hidden}
+  .btn-client b{min-width:0; overflow:hidden; text-overflow:ellipsis}
+  .btn-client .meta{display:none}
+  .btn-client i{margin-left:auto; flex-shrink:0}
+  .wide-only{display:none}
+  .tb-spacer{display:none}
+  .seg button{padding:7px 9px}
+  .tb-menu{display:inline-block; flex-shrink:0; padding:5px 11px; font-size:12pt; line-height:1}
+
+  /* ☰ 안으로 접히는 묶음 */
+  .tb-more{
+    display:none; position:absolute; top:100%; right:8px; z-index:60;
+    flex-direction:column; align-items:stretch; gap:6px;
+    min-width:190px; padding:10px;
+    background:var(--paper); border:1px solid var(--rule-strong); border-radius:3px;
+    box-shadow:0 8px 26px rgba(0,0,0,.20);
+  }
+  .toolbar.menu-open .tb-more{display:flex}
+  .tb-more .btn{width:100%; text-align:center}
+  .tb-more .savenote{
+    min-width:0; text-align:center; padding-bottom:4px;
+    border-bottom:1px solid var(--rule);
+  }
+  .lock-wrap{width:100%}
+  /* 잠금 하위 메뉴는 이미 좁은 시트 안이므로 띄우지 않고 그 자리에서 펼친다 */
+  .tb-more .lockmenu{
+    position:static; width:100%; margin-top:5px; box-shadow:none; padding:3px;
+  }
+  .tb-more .lockmenu button{font-size:9.4pt; min-height:38px; text-align:center}
+  .toolbar.menu-open ~ .tb-scrim{display:block; position:fixed; inset:0; z-index:40}
+
+  /* 손가락으로 누를 만한 크기 */
+  .btn, .seg button{min-height:38px; padding:7px 12px; font-size:9.4pt}
+  .tb-more .btn{min-height:42px}
+
+  /* ── 지면 ── */
+  #doc{padding:14px 10px calc(40px + env(safe-area-inset-bottom)); gap:14px}
+  .page{
+    padding:18px 15px 20px;
+    padding-left:max(15px, env(safe-area-inset-left));
+    padding-right:max(15px, env(safe-area-inset-right));
+    box-shadow:0 1px 2px rgba(0,0,0,.10), 0 4px 14px rgba(0,0,0,.07);
+  }
+  /* 지면 높이가 자유로우므로 쪽번호를 바닥에 못 박으면 본문 위에 겹쳐 앉는다 */
+  .page-no{position:static; margin-top:16px}
+  .overflow-flag{display:none!important}
+  /* A4 한 장을 채우려고 늘어나던 칸 — 흐르는 문서에서는 빈 구멍이 된다 */
+  .grow{flex:0 0 auto}
+  .signoff{margin-top:14px}
+  .stack{gap:11px}
+  .sheet-head{flex-direction:column; align-items:flex-start; gap:6px}
+  .head-meta{text-align:left; min-width:0; width:100%}
+  .head-meta div{justify-content:flex-start}
+  /* 값이 한 줄짜리 입력 칸이라 좁으면 잘려 나간다. 칸 수를 줄여 너비를 준다. */
+  .client{grid-template-columns:repeat(2,1fr)}
+  .client .cell:nth-child(3n){border-right:1px solid var(--rule)}
+  .client .cell:nth-child(2n){border-right:0}
+  .client .cell:nth-last-child(-n+3){border-bottom:1px solid var(--rule)}
+  .client .cell:nth-last-child(-n+2){border-bottom:0}
+  .cards{grid-template-columns:1fr}
+  .remedy{grid-template-columns:repeat(2,1fr)}
+
+  /* ── 글자 크기 ──
+     본문 치수는 A4 인쇄용 pt 값이라 손안에서는 너무 작다. 화면용으로 다시 잡는다.
+     입력 칸을 16px 아래로 두면 iOS 사파리가 초점을 잡을 때마다 화면을 확대하므로
+     읽기 편의와 별개로 16px 아래로 내려가지 않게 한다. */
+  input.f, textarea.f, select.f{font-size:16px; padding:4px 6px}
+  .prose .f{font-size:16px; line-height:1.72}
+  .sec-h h2{font-size:17px}
+  .sec-h .hj{font-size:11px}
+  .block .bh h3{font-size:15px}
+  .block .bh .hj{font-size:10px}
+  .block .bh .tagin{max-width:38%; font-size:12px}
+  .lbl{font-size:10.5px; letter-spacing:.1em}
+  .client .f{font-size:16px}
+  .card .k, .rcell .k{font-size:10.5px}
+  .card .v .f{font-size:20px}
+  .card .n .f{font-size:16px; line-height:1.45}
+  .scale-ends{font-size:10.5px}
+
+  /* 오행 막대 · 십성 세력 — 개수 칸도 손가락으로 고칠 수 있어야 한다 */
+  .bar .name{font-size:13px} .bar .glyph{font-size:17px; width:19px}
+  .bar .kor{font-size:12.5px}
+  .track{height:11px}
+  .bar.mono .glyph{font-size:13px}
+  .bar .val{font-size:15px} .bar .val input{width:30px; font-size:16px}
+  .bar .pct{font-size:11px; min-width:26px}
+  .wxbar, .bars-head{grid-template-columns:50px 1fr 34px 62px; gap:7px}
+  .bars-head{font-size:10px}
+  .wxbar .cnt input{font-size:16px}
+  .wxbar .score b{font-size:15px}
+  .wxbar .score .pct{font-size:11px; min-width:24px}
+  .bars-foot{font-size:11px}
+
+  /* 블록 제목 옆 한 줄 요약은 좁은 화면에서 아랫줄로 내려 온전한 너비를 준다 */
+  .block .bh{flex-wrap:wrap}
+  .block .bh .tagin{margin-left:0; max-width:none; width:100%; text-align:left; font-size:16px}
+  .legend, .ai-note{font-size:12px; line-height:1.6}
+
+  /* ── 명식 ── */
+  .ms-grid{grid-template-columns:46px repeat(4,1fr)}
+  .ms-grid > *{padding:3px 2px}
+  /* 줄바꿈이 낱말 가운데를 가르지 않게 — '천간 십/성'이 아니라 '천간/십성'으로 접힌다 */
+  .ms-rowlbl{
+    font-size:10px; letter-spacing:0; line-height:1.25; word-break:keep-all;
+    justify-content:center; text-align:center;
+  }
+  .ms-head .pil{font-size:13px} .ms-head .pil-sub{font-size:9.5px}
+  .ms-cell .f{font-size:16px; text-align:center; padding:3px 1px}
+  .ms-cell.gz .f{font-size:26px}
+  .ms-cell.ms-small .f{font-size:16px}
+  .wxtag{font-size:9px}
+
+  /* ── 대운표 ── 좁은 화면에서는 '요약' 칸을 접어 네 칸으로 읽는다 */
+  .daeun th:last-child, .daeun td.kw{display:none}
+  .daeun th{font-size:10.5px; padding:5px 2px}
+  .daeun td .f{font-size:16px; padding:5px 1px}
+  .daeun td.gz-cell .f{font-size:21px}
+  .daeun td.age .f{font-size:16px}
+  .luckpick{font-size:15px; padding:6px 1px; border-radius:11px}
+
+  /* ── 입력 패널 ── */
+  /* 두 칸 격자로 세운다 — 성명|성별 / 생년월일 / 출생시각|시각 모름 / 자시 기준 / 자동 계산 … */
+  .panel{padding:10px}
+  .pgrid{display:grid; grid-template-columns:1fr 1fr; gap:9px; align-items:end}
+  .fld{min-width:0}
+  .fld input, .fld select{width:100%; font-size:16px; min-height:38px}
+  .fld.w-name input, .fld.w-date input, .fld.w-time input, .fld.w-lon input{width:100%}
+  .fld.w-date, .fld.w-jasi{grid-column:span 2}
+  .chk{padding-bottom:0; align-self:center; font-size:13px; gap:8px}
+  .chk input{width:20px; height:20px; flex-shrink:0}
+  #bCalc, #bAi{grid-column:span 2}
+  .pgrid .btn{width:100%}
+  .calc-out{font-size:12.5px}
+  #aiKey, #aiModel{width:100%!important}
+  #aiOut{min-height:170px; font-size:16px}
+
+  /* ── 명식판 · 의뢰인 목록 ── */
+  .board{grid-template-columns:1fr}
+  .bcard{overflow-x:auto; -webkit-overflow-scrolling:touch}
+  .btab{font-size:12px; min-width:310px}
+  .btab th,.btab td{padding:3px 4px}
+  .btab td.lbl{font-size:10px; white-space:normal; line-height:1.25}
+  .btab th{font-size:10px}
+  .btab .big{font-size:19px}
+  .btab .sm{font-size:11px}
+  .brow{font-size:12.5px}
+  .chip{font-size:12px; padding:3px 9px}
+  .drop{
+    position:fixed; left:8px; right:8px; top:56px; width:auto;
+    max-height:calc(100vh - 76px); overflow-y:auto;
+  }
+  .drop .srch input{font-size:16px}
+  .crow{padding:11px 10px}
+  .crow .nm b{font-size:15px} .crow .nm span{font-size:11.5px}
+  .crow .del{font-size:13px; padding:7px 10px}
+  .lockbox{width:auto; margin:0 14px}
+  .lockbox input{font-size:16px}
+  #lockPass{width:100%}
+}
+
+/* 아주 좁은 화면 — 명식 넉 줄이 눌리지 않게 한 단계 더 줄인다 */
+@media screen and (max-width:380px){
+  .ms-grid{grid-template-columns:40px repeat(4,1fr)}
+  .ms-cell.gz .f{font-size:23px}
+  .ms-rowlbl{font-size:9px}
+  .toolbar{gap:5px; padding:7px 8px}
+  .btn, .seg button{padding:7px 8px; font-size:9pt}
+}
+
 </style>
 </head>
 <body class="mode-edit">
@@ -574,26 +774,35 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
     </div>
   </div>
 
-  <span class="savenote" id="saveNote">불러오는 중</span>
-  <div class="tb-spacer"></div>
-  <button type="button" class="btn" id="bPanel">입력 · 계산</button>
+  <button type="button" class="btn" id="bPanel">입력<span class="wide-only"> · 계산</span></button>
   <div class="seg" role="group" aria-label="보기 모드">
     <button type="button" id="mEdit" aria-pressed="true">작성</button>
     <button type="button" id="mView" aria-pressed="false">미리보기</button>
   </div>
-  <button type="button" class="btn" id="bImport">불러오기</button>
-  <button type="button" class="btn" id="bExport">백업 저장</button>
-  <div class="lock-wrap">
-    <button type="button" class="btn" id="bLock">잠금 설정</button>
-    <div class="lockmenu" id="lockMenu" hidden>
-      <button type="button" id="mLockNow">지금 잠그기</button>
-      <button type="button" id="mLockChange">암호 변경</button>
-      <button type="button" class="danger" id="mLockOff">잠금 해제</button>
+  <div class="tb-spacer"></div>
+
+  <!-- 좁은 화면에서는 아래 묶음이 ☰ 안으로 접힌다. 넓은 화면에서는 display:contents 라
+       묶음이 없는 것처럼 그대로 한 줄에 늘어선다. -->
+  <div class="tb-more" id="tbMore">
+    <span class="savenote" id="saveNote">불러오는 중</span>
+    <button type="button" class="btn" id="bImport">불러오기</button>
+    <button type="button" class="btn" id="bExport">백업 저장</button>
+    <div class="lock-wrap">
+      <button type="button" class="btn" id="bLock">잠금 설정</button>
+      <div class="lockmenu" id="lockMenu" hidden>
+        <button type="button" id="mLockNow">지금 잠그기</button>
+        <button type="button" id="mLockChange">암호 변경</button>
+        <button type="button" class="danger" id="mLockOff">잠금 해제</button>
+      </div>
     </div>
+    <button type="button" class="btn btn-primary" id="bPrint">인쇄 · PDF</button>
   </div>
-  <button type="button" class="btn btn-primary" id="bPrint">인쇄 · PDF</button>
+  <button type="button" class="btn tb-menu" id="bMenu" aria-expanded="false" aria-controls="tbMore">
+    <span aria-hidden="true">☰</span><span class="sr-only">메뉴 열기</span>
+  </button>
   <input type="file" id="fileIn" accept="application/json" hidden>
 </div>
+<div class="tb-scrim" id="tbScrim" hidden></div>
 
 <div class="panel no-print" id="calcPanel">
   <div class="pgrid">
@@ -606,7 +815,7 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
     <div class="fld w-time"><label for="iTime">출생시각</label>
       <input id="iTime" type="time"></div>
     <div class="chk"><input type="checkbox" id="iNoTime"><label for="iNoTime">시각 모름</label></div>
-    <div class="fld"><label for="iJasi">자시 기준</label>
+    <div class="fld w-jasi"><label for="iJasi">자시 기준</label>
       <select id="iJasi">
         <option value="early">조자시 (23시 이후 다음 날)</option>
         <option value="late">야자시 (당일 유지)</option>
@@ -1271,22 +1480,32 @@ function clearAllFields(){
 
 /* ── 렌더링 ───────────────────────────────────────────────── */
 /* rows 속성을 최소 높이로 고정한다. 내용이 짧아도 지면이 무너지지 않고,
-   이 최소 높이가 곧 '이 칸에 쓸 수 있는 분량'의 기준선이 된다. */
-function setFloors(){
+   이 최소 높이가 곧 '이 칸에 쓸 수 있는 분량'의 기준선이 된다.
+   다만 좁은 화면에서는 A4 한 장을 채울 일이 없으므로 그 여백이 빈 스크롤이 될 뿐이다.
+   손가락으로 짚을 만큼(두 줄)만 남기고, 인쇄할 때는 언제나 rows 기준으로 되돌린다. */
+function setFloors(forPrint){
+  var narrow = !forPrint && window.matchMedia("(max-width:680px)").matches;
   document.querySelectorAll("textarea.f").forEach(function(t){
     var rows = parseInt(t.getAttribute("rows"), 10) || 3;
     var cs = getComputedStyle(t);
     var lh = parseFloat(cs.lineHeight);
     if(!isFinite(lh)) lh = parseFloat(cs.fontSize) * 1.55;
     var pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
-    t.style.minHeight = Math.round(rows * lh + pad) + "px";
+    t.style.minHeight = Math.round((narrow ? 2 : rows) * lh + pad) + "px";
   });
 }
 
-function autoGrow(el){
+function autoGrow(el, forPrint){
   if(el.tagName !== "TEXTAREA") return;
+  // A4에서는 rows 로 잡아 둔 여백이 지면을 고르게 잡아 주지만, 좁은 화면에서는
+  // 빈 칸만큼 스크롤이 길어진다. 잴 때만 한 줄로 낮춰 실제 내용 높이를 얻는다.
+  // 인쇄할 때는 화면 폭과 무관하게 언제나 A4 기준(rows 그대로)으로 되돌린다.
+  var narrow = !forPrint && window.matchMedia("(max-width:680px)").matches;
+  var rows = el.rows;
+  if(narrow) el.rows = 1;
   el.style.height = "auto";
   el.style.height = el.scrollHeight + "px";
+  if(narrow) el.rows = rows;
 }
 
 function renderChips(){
@@ -1295,6 +1514,8 @@ function renderChips(){
     if(!box) return;
     var items = input.value.split(",").map(function(s){ return s.trim(); })
                   .filter(function(s){ return s.length; });
+    // 해당 없음도 비워 두지 않고 적는다. 빈 제목만 남으면 아직 계산 전인지 없는 것인지 모른다.
+    if (!items.length){ box.innerHTML = '<span class="chip chip-none">없음</span>'; return; }
     box.innerHTML = items.map(function(s){
       var seal = /충|형|파|해|살|絶|공망/.test(s) ? " on-seal" : "";
       return '<span class="chip'+seal+'">'+
@@ -1432,7 +1653,7 @@ function checkOverflow(){
 }
 
 function refreshAll(){
-  fields.forEach(autoGrow);
+  fields.forEach(function(el){ autoGrow(el); });
   renderChips();
   renderWuxing();
   renderSipseong();
@@ -1946,6 +2167,29 @@ g("bPanel").addEventListener("click", function(){
   var p = g("calcPanel"); p.hidden = !p.hidden; setTimeout(checkOverflow, 0);
 });
 
+// 좁은 화면에서 툴바 뒷줄을 접어 두는 ☰
+var tbar = document.querySelector(".toolbar");
+function toggleMenu(open){
+  var on = (open === undefined) ? !tbar.classList.contains("menu-open") : open;
+  tbar.classList.toggle("menu-open", on);
+  g("bMenu").setAttribute("aria-expanded", String(on));
+  g("tbScrim").hidden = !on;
+}
+g("bMenu").addEventListener("click", function(e){ e.stopPropagation(); toggleMenu(); });
+g("tbScrim").addEventListener("click", function(){ toggleMenu(false); });
+// 메뉴 안에서 무엇이든 누르면 닫는다. 잠금 하위 메뉴를 여는 버튼만 남겨 둔다.
+g("tbMore").addEventListener("click", function(e){
+  if (e.target.closest("#bLock")) return;
+  if (e.target.closest("button")) toggleMenu(false);
+});
+document.addEventListener("keydown", function(e){
+  if (e.key === "Escape" && tbar.classList.contains("menu-open")) toggleMenu(false);
+});
+// 화면이 넓어지면 접힘 상태를 풀어 둔다
+window.addEventListener("resize", function(){
+  if (window.innerWidth > 680 && tbar.classList.contains("menu-open")) toggleMenu(false);
+});
+
 // 의뢰인 목록
 var drop = g("clientDrop");
 function toggleDrop(open){
@@ -1970,6 +2214,8 @@ g("bNew").addEventListener("click", function(){
   clearAllFields(); writeBirth({}); calcOut.hidden = true;
   g("aiOut").value = ""; lastAnalysis = null; lastDraft = null;
   persist(); renderClientBar(); renderClientList();
+  // 좁은 화면에서는 목록이 화면을 덮는 시트라, 열어 둔 채로 두면 방금 띄운 입력 칸을 가린다
+  toggleDrop(false);
   g("calcPanel").hidden = false; iName.focus();
   note.textContent = "새 의뢰인";
 });
@@ -1981,6 +2227,7 @@ g("bDup").addEventListener("click", function(){
   n.birth  = JSON.parse(JSON.stringify(c.birth || {}));
   writeAll(n.fields); writeBirth(n.birth);
   persist(); renderClientBar(); renderClientList();
+  toggleDrop(false);
   note.textContent = "복제됨";
 });
 g("bRename").addEventListener("click", function(){
@@ -2169,8 +2416,21 @@ document.addEventListener("keydown", function(e){
   persist(); renderClientBar(); renderClientList(); renderLockBtn();
   note.textContent = state ? "이어서 작업" : "새 문서";
   g("calcPanel").hidden = !!(c.fields && c.fields["ms.gan.il"]);
-  window.addEventListener("resize", checkOverflow);
-  window.addEventListener("beforeprint", function(){ setMode(true); });
+  // 폭이 바뀌면 글줄 수가 달라지고, 좁은 화면 기준도 넘나든다 — 높이를 다시 잰다
+  var reflow;
+  function reflowAll(){
+    setFloors(); fields.forEach(function(el){ autoGrow(el); }); checkOverflow();
+  }
+  window.addEventListener("resize", function(){
+    clearTimeout(reflow); reflow = setTimeout(reflowAll, 90);
+  });
+  window.addEventListener("orientationchange", function(){ setTimeout(reflowAll, 220); });
+  // 인쇄할 때는 화면 폭과 무관하게 A4 기준 높이로 되돌려야 세 쪽 배분이 유지된다.
+  // 휴대폰에서 인쇄해도 결과 PDF는 데스크톱에서 뽑은 것과 같아야 한다.
+  window.addEventListener("beforeprint", function(){
+    setMode(true); setFloors(true); fields.forEach(function(el){ autoGrow(el, true); });
+  });
+  window.addEventListener("afterprint", reflowAll);
 })();
 
 })();
