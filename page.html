@@ -494,6 +494,8 @@ input[type="range"].f:focus-visible::-moz-range-thumb{outline:2px solid var(--ac
 .calc-out[hidden]{display:none}
 .calc-out .gz{font-family:var(--f-serif); font-size:13pt; letter-spacing:.1em; padding:0}
 .calc-out .warn{color:var(--seal)}
+/* 여덟 자리가 덜 찼거나 달력에 없는 날이면 밑줄로 알린다 */
+.fld input.is-baddate{border-color:var(--seal); box-shadow:inset 0 -2px 0 var(--seal)}
 .calc-out .ok{color:var(--st-good)}
 .auto-mark{position:relative}
 body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
@@ -849,7 +851,8 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
     <div class="fld"><label for="iSex">성별</label>
       <select id="iSex"><option value="M">남 · 건명</option><option value="F">여 · 곤명</option></select></div>
     <div class="fld w-date"><label for="iDate">양력 생년월일</label>
-      <input id="iDate" type="date"></div>
+      <input id="iDate" type="text" inputmode="numeric" autocomplete="off"
+             maxlength="10" placeholder="1999-08-12" aria-describedby="dateHint"></div>
     <div class="fld w-time"><label for="iTime">출생시각</label>
       <input id="iTime" type="time"></div>
     <div class="chk"><input type="checkbox" id="iNoTime"><label for="iNoTime">시각 모름</label></div>
@@ -876,7 +879,8 @@ body.mode-edit .f.is-auto{box-shadow:inset 0 -1.5px 0 rgba(31,58,95,.28)}
     <div class="fld"><label for="mSex">성별</label>
       <select id="mSex"><option value="F">여 · 곤명</option><option value="M">남 · 건명</option></select></div>
     <div class="fld w-date"><label for="mDate">양력 생년월일</label>
-      <input id="mDate" type="date"></div>
+      <input id="mDate" type="text" inputmode="numeric" autocomplete="off"
+             maxlength="10" placeholder="1993-05-09"></div>
     <div class="fld w-time"><label for="mTime">출생시각</label>
       <input id="mTime" type="time"></div>
     <div class="chk"><input type="checkbox" id="mNoTime"><label for="mNoTime">시각 모름</label></div>
@@ -1763,7 +1767,7 @@ var lastMate = null, lastGh = null;
    있으면 조용히 다시 세운다. 문서의 어떤 칸도 건드리지 않는다. */
 function ensureAnalysis(){
   if (lastAnalysis || typeof Saju === "undefined") return lastAnalysis;
-  if (!iDate.value) return null;
+  if (!validDate(iDate.value)) return null;
   var dp = iDate.value.split("-").map(Number);
   var noT = iNoTime.checked || !iTime.value;
   var tp = noT ? [12,0] : iTime.value.split(":").map(Number);
@@ -1776,7 +1780,7 @@ function ensureAnalysis(){
 
 function mateAnalysis(){
   var m = readMate();
-  if (typeof Saju === "undefined" || !m.date) return null;
+  if (typeof Saju === "undefined" || !validDate(m.date)) return null;
   var dp = m.date.split("-").map(Number);
   var noT = m.noTime || !m.time;
   var tp = noT ? [12,0] : m.time.split(":").map(Number);
@@ -1789,7 +1793,7 @@ function renderGunghap(){
   var page = g("page5"); if(!page) return;
   var m = readMate();
   ensureAnalysis();
-  var B = (lastAnalysis && m.date) ? mateAnalysis() : null;
+  var B = (lastAnalysis && validDate(m.date)) ? mateAnalysis() : null;
   lastMate = B;
   if (!lastAnalysis || !B){ page.hidden = true; lastGh = null; renumberPages(); return; }
 
@@ -1964,6 +1968,59 @@ function g(id){ return document.getElementById(id); }
 // 시각은 서울 기준 경도 보정(진태양시)으로 계산한다
 var FIXED_LON = 126.978, FIXED_TST = "lon";
 
+/* ── 생년월일 입력 ───────────────────────────────────────────
+   <input type="date"> 를 쓰지 않는다. 크롬의 연도 칸은 max 를 걸어도 다섯~여섯
+   자리를 계속 받아서, 19990812 를 이어 치면 연도가 199908 을 먹고 12 가 월로 간다.
+   그래서 여덟 자리를 직접 받아 YYYY-MM-DD 로 짜 준다. 값의 모양은 그대로라
+   저장·계산 쪽은 손댈 것이 없다. 생년월일은 달력에서 고르기보다 손으로 치는 편이
+   빠른 값이기도 하다(1954년을 달력으로 넘겨 찾을 일이 없다). */
+function formatDateDigits(d){
+  d = d.slice(0, 8);
+  if (d.length <= 4) return d;
+  if (d.length <= 6) return d.slice(0,4) + "-" + d.slice(4);
+  return d.slice(0,4) + "-" + d.slice(4,6) + "-" + d.slice(6);
+}
+function attachDateMask(el){
+  function reformat(){
+    var before = el.value.slice(0, el.selectionStart || 0);
+    var digitsBefore = (before.match(/\d/g) || []).length;
+    var digits = (el.value.match(/\d/g) || []).join("");
+    var out = formatDateDigits(digits);
+    if (out !== el.value){
+      el.value = out;
+      // 커서를 자릿수 기준으로 되돌린다 — 가운데를 고쳐도 자리가 튀지 않게
+      var pos = 0, seen = 0;
+      while (pos < out.length && seen < digitsBefore){
+        if (/\d/.test(out[pos])) seen++;
+        pos++;
+      }
+      if (pos < out.length && out[pos] === "-") pos++;
+      try { el.setSelectionRange(pos, pos); } catch(e){}
+    }
+    el.classList.toggle("is-baddate", el.value.length > 0 && !validDate(el.value));
+  }
+  el.addEventListener("input", reformat);
+  el.addEventListener("blur", reformat);
+}
+// 달력에 실제로 있는 날인지까지 본다 — 2월 30일 같은 값을 걸러 낸다
+function validDate(s){
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || "");
+  if (!m) return false;
+  var y = +m[1], mo = +m[2], d = +m[3];
+  if (y < 1 || mo < 1 || mo > 12 || d < 1) return false;
+  var dt = new Date(y, mo - 1, d);
+  return dt.getFullYear() === y && dt.getMonth() === mo - 1 && dt.getDate() === d;
+}
+attachDateMask(iDate);
+attachDateMask(g("mDate"));
+// 무엇이 잘못됐는지 나누어 말한다 — 덜 찬 것과 달력에 없는 날은 다른 문제다
+function dateComplaint(v, who){
+  if (!v) return who + "양력 생년월일을 입력해 주십시오.";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v))
+    return who + "생년월일을 여덟 자리로 채워 주십시오. 예: 19990812 → 1999-08-12\n지금 값: " + v;
+  return who + "달력에 없는 날짜입니다: " + v;
+}
+
 iNoTime.addEventListener("change", function(){
   iTime.disabled = iNoTime.checked; saveBirth();
 });
@@ -1988,6 +2045,13 @@ function writeBirth(b){
   iNoTime.checked = !!b.noTime; iTime.disabled = !!b.noTime;
   iJasi.value = b.jasi || "early";
   writeMate(b.mate || {});
+  syncDateFlags();
+}
+// 프로그램이 값을 넣었을 때도 잘못된 날짜 표시를 맞춰 준다
+function syncDateFlags(){
+  [iDate, g("mDate")].forEach(function(el){
+    if (el) el.classList.toggle("is-baddate", el.value.length > 0 && !validDate(el.value));
+  });
 }
 // 궁합 상대도 의뢰인 기록에 함께 담긴다 — 사람마다 상대가 다르므로
 function readMate(){
@@ -2024,7 +2088,7 @@ function runCalc(){
       'index.html 과 saju.js 를 같은 폴더에 두고 다시 열어 주십시오.</span>';
     return;
   }
-  if(!iDate.value){ alert("양력 생년월일을 입력해 주십시오."); iDate.focus(); return; }
+  if(!validDate(iDate.value)){ alert(dateComplaint(iDate.value, "")); iDate.focus(); return; }
   var dparts = iDate.value.split("-").map(Number);
   var noTime = iNoTime.checked || !iTime.value;
   var tparts = noTime ? [12,0] : iTime.value.split(":").map(Number);
@@ -2321,7 +2385,7 @@ g("mNoTime").addEventListener("change", function(){ g("mTime").disabled = this.c
 g("bMateCalc").addEventListener("click", function(){
   var out = g("mateOut");
   if (!lastAnalysis){ alert("먼저 의뢰인의 자동 계산을 눌러 주십시오."); return; }
-  if (!g("mDate").value){ alert("상대의 양력 생년월일을 입력해 주십시오."); g("mDate").focus(); return; }
+  if (!validDate(g("mDate").value)){ alert(dateComplaint(g("mDate").value, "상대의 ")); g("mDate").focus(); return; }
   refreshAll(); save();   // refreshAll 이 궁합·칩을 함께 다시 그린다
   out.hidden = false;
   if (!lastGh){ out.innerHTML = '<span class="warn">상대의 명식을 세우지 못했습니다. 날짜를 확인해 주십시오.</span>'; return; }
