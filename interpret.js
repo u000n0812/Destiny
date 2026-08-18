@@ -1039,7 +1039,7 @@ function generate(a, S){
   return out;
 }
 
-/* ── AI 프롬프트 — 사람이 받아 온 답을 3순위 참고로 쓴다 ──── */
+/* ── AI 프롬프트 — 받아 온 답은 참고로만 쓴다 ─────────────── */
 function buildPrompt(a, S, draft){
   var p = a.pillars, W = S.WX_HANJA, L = [];
   var pos = ["nyeon","wol","il","si"];
